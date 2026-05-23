@@ -1,0 +1,76 @@
+<%- include('../partials/head', { title: 'My Offers – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <%- include('../partials/sidebar-student', { user: user, activePage: 'offers' }) %>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="max-w-4xl">
+      <h1 class="font-display text-2xl font-bold text-dark mb-2">Offer Letters</h1>
+      <p class="text-gray-500 text-sm mb-6">Review and respond to your admission offers</p>
+      <div id="offers-container" class="space-y-4"></div>
+    </div>
+  </main>
+</div>
+<script>
+const STATUS_STYLE = { pending:'badge-blue', accepted:'badge-green', declined:'badge-red', expired:'badge-gray', cancelled:'badge-gray' };
+
+async function loadOffers() {
+  try {
+    // Get offers via applications that have offerRef
+    const appData = await apiCall('/api/v1/applications?limit=50');
+    const withOffers = appData.data.filter(a => a.offerRef || a.status === 'offer_extended' || a.status === 'accepted');
+    const container = document.getElementById('offers-container');
+
+    if (!withOffers.length) {
+      container.innerHTML = `<div class="card text-center py-16">
+        <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <p class="font-medium text-gray-500">No offer letters yet</p>
+        <p class="text-sm text-gray-400 mt-1">Offers will appear here once universities respond to your applications</p>
+        <a href="/student/applications" class="btn-primary mt-4">View Applications</a>
+      </div>`; return;
+    }
+
+    // Load each offer
+    container.innerHTML = '';
+    for (const app of withOffers) {
+      if (!app.offerRef) continue;
+      try {
+        const offerData = await apiCall(`/api/v1/offers/${app.offerRef._id || app.offerRef}`);
+        const o = offerData.data;
+        const isExpired = new Date(o.expiresAt) < new Date();
+        const daysLeft = Math.ceil((new Date(o.expiresAt) - new Date()) / (1000*60*60*24));
+        container.insertAdjacentHTML('beforeend', `
+          <div class="card hover:shadow-md transition-shadow ${o.status==='pending' && !isExpired ? 'border-brand-200' : ''}">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl overflow-hidden bg-brand-100 shrink-0">
+                  ${o.university?.logo ? `<img src="${o.university.logo}" class="w-full h-full object-cover"/>` : `<div class="w-full h-full flex items-center justify-center font-display font-bold text-brand-600 text-xl">${(o.university?.name||'U').charAt(0)}</div>`}
+                </div>
+                <div>
+                  <h3 class="font-display font-bold text-dark">${o.university?.name}</h3>
+                  <p class="text-sm text-gray-500">${o.program?.name} · ${o.program?.degree}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">Ref: ${o.offerNumber} · ${o.intake} ${o.intakeYear}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="${STATUS_STYLE[o.status]||'badge-gray'}">${o.status}</span>
+                ${o.status==='pending' && !isExpired ? `<span class="text-xs ${daysLeft<=7?'text-red-600':'text-orange-600'} font-medium">${daysLeft}d left</span>` : ''}
+              </div>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-3 mt-4">
+              <div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-400">Type</p><p class="font-medium text-dark text-sm mt-0.5 capitalize">${o.type}</p></div>
+              <div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-400">Tuition</p><p class="font-medium text-dark text-sm mt-0.5">${o.tuitionFee?.amount ? 'USD '+o.tuitionFee.amount.toLocaleString() : '—'}</p></div>
+              <div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-400">Expires</p><p class="font-medium text-sm mt-0.5 ${isExpired?'text-red-500':'text-dark'}">${new Date(o.expiresAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p></div>
+            </div>
+            <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+              ${o.pdfUrl ? `<a href="${o.pdfUrl}" target="_blank" class="btn-secondary text-xs py-2 px-4">Download PDF</a>` : ''}
+              <a href="/student/offers/${o._id}" class="btn-primary text-xs py-2 px-4 ${o.status==='pending'&&!isExpired?'':'bg-gray-600 hover:bg-gray-700'}">${o.status==='pending'&&!isExpired?'View & Respond':'View Details'}</a>
+            </div>
+          </div>`);
+      } catch {}
+    }
+    if (!container.children.length) container.innerHTML = '<div class="card text-center py-8 text-gray-400">No offers to display</div>';
+  } catch (err) { showToast(err.message, 'error'); }
+}
+loadOffers();
+</script>
+<%- include('../partials/footer') %>

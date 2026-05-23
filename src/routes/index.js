@@ -1,0 +1,15 @@
+'use strict';
+const express = require('express');
+const router = express.Router();
+router.use('/auth', require('./api/auth'));
+router.use('/universities', require('./api/universities'));
+router.use('/programs', require('./api/programs'));
+router.use('/scholarships', require('./api/scholarships'));
+router.use('/applications', require('./api/applications'));
+router.use('/offers', require('./api/offers'));
+router.use('/payments', require('./api/payments'));
+router.use('/notifications', require('./api/notifications'));
+router.use('/messages', require('./api/messages'));
+router.use('/admin', require('./api/admin'));
+router.use('/profile', require('./api/profile'));
+module.exports = router;

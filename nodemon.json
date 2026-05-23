@@ -1,0 +1,7 @@
+{
+  "watch": ["src", "views"],
+  "ext": "js,ejs,json",
+  "ignore": ["node_modules", "logs", "public", "tests"],
+  "env": { "NODE_ENV": "development" },
+  "delay": 500
+}

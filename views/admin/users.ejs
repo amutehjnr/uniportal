@@ -1,0 +1,116 @@
+<%- include('../partials/head', { title: 'User Management – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <aside class="w-64 shrink-0 hidden lg:flex flex-col bg-dark min-h-screen sticky top-16 p-5 gap-1">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest px-4 mb-2 mt-2">Admin Panel</p>
+    <a href="/admin/dashboard" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Dashboard</a>
+    <a href="/admin/users" class="sidebar-link active text-white">Users</a>
+    <a href="/admin/universities" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Universities</a>
+    <a href="/admin/payments" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Payments</a>
+    <a href="/admin/scholarships" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Scholarships</a>
+    <a href="/admin/audit-logs" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Audit Logs</a>
+  </aside>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="font-display text-2xl font-bold text-dark">User Management</h1>
+      <button onclick="document.getElementById('add-user-modal').classList.remove('hidden')" class="btn-primary">+ Add Admin User</button>
+    </div>
+    <div class="card mb-5 flex flex-wrap gap-3">
+      <input id="search" type="text" placeholder="Search by name or email…" class="input-field w-64" oninput="debounce(loadUsers,400)()" />
+      <select id="role-filter" class="input-field w-auto" onchange="loadUsers()">
+        <option value="">All Roles</option><option value="student">Students</option><option value="university">Universities</option><option value="admin">Admins</option><option value="admission_officer">Officers</option>
+      </select>
+      <select id="status-filter" class="input-field w-auto" onchange="loadUsers()">
+        <option value="">All Status</option><option value="active">Active</option><option value="suspended">Suspended</option>
+      </select>
+    </div>
+    <div class="card overflow-hidden p-0">
+      <table class="w-full text-sm"><thead class="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
+        <tr><th class="px-5 py-3 text-left font-semibold">User</th><th class="px-5 py-3 text-left font-semibold">Role</th><th class="px-5 py-3 text-left font-semibold">Status</th><th class="px-5 py-3 text-left font-semibold">Joined</th><th class="px-5 py-3 text-left font-semibold">Actions</th></tr>
+      </thead><tbody id="users-tbody"><tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">Loading…</td></tr></tbody></table>
+    </div>
+    <div id="pagination" class="flex justify-center mt-5 gap-2"></div>
+  </main>
+</div>
+
+<!-- Suspend Modal -->
+<div id="suspend-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide-up p-6">
+    <h3 class="font-display text-xl font-bold text-dark mb-1">Suspend User</h3>
+    <p id="suspend-info" class="text-gray-500 text-sm mb-4"></p>
+    <textarea id="suspend-reason" rows="3" class="input-field resize-none mb-4" placeholder="Reason for suspension…" required></textarea>
+    <div class="flex gap-3"><button onclick="document.getElementById('suspend-modal').classList.add('hidden')" class="btn-secondary flex-1 justify-center">Cancel</button><button onclick="confirmSuspend()" class="btn-danger flex-1 justify-center">Suspend User</button></div>
+  </div>
+</div>
+
+<!-- Add Admin User Modal -->
+<div id="add-user-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide-up p-6">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-display text-xl font-bold text-dark">Add Admin User</h3><button onclick="document.getElementById('add-user-modal').classList.add('hidden')" class="text-gray-400">✕</button></div>
+    <form id="add-user-form" class="space-y-4">
+      <div class="grid grid-cols-2 gap-3"><div><label class="block text-sm font-medium text-dark mb-1.5">First Name</label><input name="firstName" required class="input-field" /></div><div><label class="block text-sm font-medium text-dark mb-1.5">Last Name</label><input name="lastName" required class="input-field" /></div></div>
+      <div><label class="block text-sm font-medium text-dark mb-1.5">Email</label><input name="email" type="email" required class="input-field" /></div>
+      <div><label class="block text-sm font-medium text-dark mb-1.5">Password</label><input name="password" type="password" required minlength="8" class="input-field" /></div>
+      <div><label class="block text-sm font-medium text-dark mb-1.5">Role</label><select name="role" required class="input-field"><option value="admin">Admin</option><option value="admission_officer">Admission Officer</option></select></div>
+      <div class="flex gap-3"><button type="button" onclick="document.getElementById('add-user-modal').classList.add('hidden')" class="btn-secondary flex-1 justify-center">Cancel</button><button type="submit" class="btn-primary flex-1 justify-center">Create User</button></div>
+    </form>
+  </div>
+</div>
+
+<script>
+let currentPage = 1, suspendUserId = null;
+let debounceTimer;
+function debounce(fn,d){return function(){clearTimeout(debounceTimer);debounceTimer=setTimeout(fn,d);};}
+const ROLE_BADGE = { student:'badge-blue', university:'badge-purple', admin:'badge-red', super_admin:'badge-red', admission_officer:'badge-yellow' };
+
+async function loadUsers(page = currentPage) {
+  currentPage = page;
+  const search = document.getElementById('search').value;
+  const role = document.getElementById('role-filter').value;
+  const status = document.getElementById('status-filter').value;
+  const params = new URLSearchParams({ page, limit:20, ...(search&&{search}), ...(role&&{role}), ...(status&&{status}) });
+  try {
+    const data = await apiCall(`/api/v1/admin/users?${params}`);
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = data.data.length ? data.data.map(u => `
+      <tr class="border-b border-gray-50 hover:bg-gray-50/50">
+        <td class="px-5 py-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center font-bold text-sm">${u.firstName.charAt(0).toUpperCase()}</div>
+            <div><p class="font-medium text-dark text-sm">${u.firstName} ${u.lastName}</p><p class="text-xs text-gray-400">${u.email}</p></div>
+          </div>
+        </td>
+        <td class="px-5 py-3"><span class="${ROLE_BADGE[u.role]||'badge-gray'} capitalize text-xs">${u.role.replace(/_/g,' ')}</span></td>
+        <td class="px-5 py-3"><span class="${u.isSuspended?'badge-red':u.isActive?'badge-green':'badge-gray'} text-xs">${u.isSuspended?'Suspended':u.isActive?'Active':'Inactive'}</span></td>
+        <td class="px-5 py-3 text-xs text-gray-400">${new Date(u.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}</td>
+        <td class="px-5 py-3">
+          ${!u.isSuspended&&u.role!=='super_admin'?`<button onclick="openSuspend('${u._id}','${u.firstName} ${u.lastName}')" class="text-xs text-red-600 hover:text-red-700 font-medium">Suspend</button>`:'<span class="text-xs text-gray-400">—</span>'}
+        </td>
+      </tr>`).join('') : '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">No users found</td></tr>';
+
+    const { pages, page:pg } = data.pagination;
+    if (pages > 1) document.getElementById('pagination').innerHTML = Array.from({length:pages},(_,i)=>i+1).map(p=>`<button onclick="loadUsers(${p})" class="${p===pg?'btn-primary':'btn-secondary'} text-xs py-1.5 px-3">${p}</button>`).join('');
+  } catch (err) { showToast(err.message,'error'); }
+}
+
+function openSuspend(id, name) { suspendUserId=id; document.getElementById('suspend-info').textContent=`User: ${name}`; document.getElementById('suspend-modal').classList.remove('hidden'); }
+async function confirmSuspend() {
+  const reason = document.getElementById('suspend-reason').value;
+  if (!reason.trim()) { showToast('Please provide a reason.','error'); return; }
+  try {
+    await apiCall(`/api/v1/admin/users/${suspendUserId}/suspend`, { method:'PATCH', body:JSON.stringify({ reason }) });
+    showToast('User suspended.','success'); document.getElementById('suspend-modal').classList.add('hidden'); loadUsers();
+  } catch (err) { showToast(err.message,'error'); }
+}
+
+document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+  e.preventDefault(); const f=e.target;
+  try {
+    await apiCall('/api/v1/admin/users', { method:'POST', body:JSON.stringify({ firstName:f.firstName.value, lastName:f.lastName.value, email:f.email.value, password:f.password.value, role:f.role.value }) });
+    showToast('Admin user created!','success'); document.getElementById('add-user-modal').classList.add('hidden'); f.reset(); loadUsers();
+  } catch (err) { showToast(err.message,'error'); }
+});
+
+loadUsers();
+</script>
+<%- include('../partials/footer') %>

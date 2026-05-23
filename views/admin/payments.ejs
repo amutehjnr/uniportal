@@ -1,0 +1,130 @@
+<%- include('../partials/head', { title: 'Payment Verification – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <aside class="w-64 shrink-0 hidden lg:flex flex-col bg-dark min-h-screen sticky top-16 p-5 gap-1">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest px-4 mb-2 mt-2">Admin Panel</p>
+    <a href="/admin/dashboard" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Dashboard</a>
+    <a href="/admin/users" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Users</a>
+    <a href="/admin/universities" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Universities</a>
+    <a href="/admin/payments" class="sidebar-link active text-white">Payments</a>
+    <a href="/admin/audit-logs" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Audit Logs</a>
+  </aside>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="font-display text-2xl font-bold text-dark">Payment Verification</h1>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-6 flex gap-3 flex-wrap">
+      <select id="status-filter" class="input-field w-auto" onchange="loadPayments()">
+        <option value="submitted">Pending Verification</option>
+        <option value="">All Payments</option>
+        <option value="verified">Verified</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+
+    <div id="payments-table" class="card overflow-hidden p-0">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Student</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Amount</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Method</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Reference</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Date</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Status</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="payments-body">
+            <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Verify Modal -->
+<div id="verify-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-slide-up">
+    <h3 class="font-display text-xl font-bold text-dark mb-1">Verify Payment</h3>
+    <p class="text-gray-500 text-sm mb-5" id="modal-payment-info"></p>
+    <div id="proof-container" class="mb-4"></div>
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-dark mb-1.5">Admin Notes (optional)</label>
+      <textarea id="admin-notes" rows="3" class="input-field resize-none" placeholder="Add verification notes…"></textarea>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="btn-secondary flex-1 justify-center">Cancel</button>
+      <button onclick="verifyPayment('rejected')" class="btn-danger flex-1 justify-center">Reject</button>
+      <button onclick="verifyPayment('verified')" class="btn-primary bg-green-600 hover:bg-green-700 flex-1 justify-center">Verify ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATUS_COLORS = { pending:'badge-gray', submitted:'badge-yellow', under_review:'badge-yellow', verified:'badge-green', rejected:'badge-red' };
+let currentPaymentId = null;
+
+async function loadPayments() {
+  const status = document.getElementById('status-filter').value;
+  const params = new URLSearchParams({ limit: 50, ...(status && { status }) });
+  try {
+    const data = await apiCall(`/api/v1/payments?${params}`);
+    const tbody = document.getElementById('payments-body');
+    if (!data.data.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">No payments found</td></tr>'; return;
+    }
+    tbody.innerHTML = data.data.map(p => `
+      <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+        <td class="px-5 py-3">
+          <div>
+            <p class="font-medium text-dark">${p.user ? p.user.firstName + ' ' + p.user.lastName : '—'}</p>
+            <p class="text-xs text-gray-400">${p.user?.email || ''}</p>
+          </div>
+        </td>
+        <td class="px-5 py-3 font-semibold text-dark">${p.currency} ${parseFloat(p.amount).toLocaleString()}</td>
+        <td class="px-5 py-3 text-gray-600 capitalize">${p.method?.replace(/_/g,' ')}</td>
+        <td class="px-5 py-3 font-mono text-xs text-gray-500">${p.reference}</td>
+        <td class="px-5 py-3 text-gray-500 text-xs">${new Date(p.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+        <td class="px-5 py-3"><span class="${STATUS_COLORS[p.status]||'badge-gray'}">${p.status}</span></td>
+        <td class="px-5 py-3">
+          ${['submitted','under_review'].includes(p.status) ? `<button onclick="openModal('${p._id}', '${p.user?.firstName||''} ${p.user?.lastName||''}', '${p.currency} ${p.amount}', '${p.proofOfPayment?.url||''}')" class="btn-primary text-xs py-1.5 px-3">Review</button>` : '<span class="text-xs text-gray-400">—</span>'}
+        </td>
+      </tr>`).join('');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function openModal(id, name, amount, proofUrl) {
+  currentPaymentId = id;
+  document.getElementById('modal-payment-info').textContent = `Student: ${name} · Amount: ${amount}`;
+  document.getElementById('proof-container').innerHTML = proofUrl
+    ? `<div class="mb-4"><p class="text-sm font-medium text-dark mb-2">Proof of Payment:</p><a href="${proofUrl}" target="_blank"><img src="${proofUrl}" class="w-full max-h-48 object-contain rounded-xl border border-gray-200" onerror="this.outerHTML='<a href=${proofUrl} target=_blank class=btn-secondary text-xs>View Document</a>'" /></a></div>`
+    : '<p class="text-sm text-gray-400 mb-4">No proof uploaded</p>';
+  document.getElementById('verify-modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('verify-modal').classList.add('hidden'); currentPaymentId = null; }
+
+async function verifyPayment(status) {
+  if (!currentPaymentId) return;
+  try {
+    await apiCall(`/api/v1/payments/${currentPaymentId}/verify`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, adminNotes: document.getElementById('admin-notes').value }),
+    });
+    showToast(`Payment ${status} successfully.`, status === 'verified' ? 'success' : 'info');
+    closeModal();
+    loadPayments();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+loadPayments();
+</script>
+<%- include('../partials/footer') %>

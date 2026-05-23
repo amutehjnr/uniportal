@@ -1,0 +1,71 @@
+<%- include('../partials/head', { title: 'Scholarships – University Portal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <aside class="w-64 shrink-0 hidden lg:flex flex-col bg-white border-r border-gray-100 min-h-screen sticky top-16 p-5 gap-1">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest px-4 mb-2">University Panel</p>
+    <a href="/university/dashboard" class="sidebar-link">Dashboard</a>
+    <a href="/university/applications" class="sidebar-link">Applications</a>
+    <a href="/university/programs" class="sidebar-link">Programs</a>
+    <a href="/university/scholarships" class="sidebar-link active">Scholarships</a>
+    <a href="/university/messages" class="sidebar-link">Messages</a>
+  </aside>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="font-display text-2xl font-bold text-dark">Scholarships</h1>
+      <button onclick="document.getElementById('add-modal').classList.remove('hidden')" class="btn-primary">+ Add Scholarship</button>
+    </div>
+    <div id="scholarships-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </main>
+</div>
+
+<div id="add-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-slide-up max-h-[90vh] overflow-y-auto p-6">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-display text-xl font-bold text-dark">Add Scholarship</h3><button onclick="document.getElementById('add-modal').classList.add('hidden')" class="text-gray-400">✕</button></div>
+    <form id="scholarship-form" class="space-y-4">
+      <div><label class="block text-sm font-medium text-dark mb-1.5">Name *</label><input name="name" required class="input-field" placeholder="e.g. Merit Excellence Award"/></div>
+      <div><label class="block text-sm font-medium text-dark mb-1.5">Type *</label><select name="type" required class="input-field"><option value="merit">Merit</option><option value="need">Need-Based</option><option value="diversity">Diversity</option><option value="research">Research</option><option value="partial">Partial</option><option value="full_tuition">Full Tuition</option><option value="full_ride">Full Ride</option></select></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-sm font-medium text-dark mb-1.5">Amount (USD)</label><input type="number" name="amount" min="0" class="input-field" placeholder="10000"/></div>
+        <div><label class="block text-sm font-medium text-dark mb-1.5">Deadline *</label><input type="date" name="deadline" required class="input-field"/></div>
+      </div>
+      <div><label class="block text-sm font-medium text-dark mb-1.5">Min GPA</label><input type="number" name="gpa" min="0" max="4" step="0.1" class="input-field" placeholder="3.0"/></div>
+      <div><label class="block text-sm font-medium text-dark mb-1.5">Description *</label><textarea name="description" required rows="3" class="input-field resize-none" placeholder="Scholarship description…"></textarea></div>
+      <div class="flex gap-3"><button type="button" onclick="document.getElementById('add-modal').classList.add('hidden')" class="btn-secondary flex-1 justify-center">Cancel</button><button type="submit" class="btn-primary flex-1 justify-center">Create</button></div>
+    </form>
+  </div>
+</div>
+
+<script>
+async function loadScholarships() {
+  try {
+    const meData = await apiCall('/api/v1/auth/me');
+    const params = new URLSearchParams({ limit:50 });
+    const data = await apiCall(`/api/v1/scholarships?${params}`);
+    const myScholarships = data.data.filter(s => s.university?._id === meData.data.universityRef || String(s.university) === String(meData.data.universityRef));
+    const grid = document.getElementById('scholarships-grid');
+    if (!myScholarships.length) { grid.innerHTML='<div class="col-span-full card text-center py-8 text-gray-400">No scholarships yet. Add your first scholarship!</div>'; return; }
+    grid.innerHTML = myScholarships.map(s=>`
+      <div class="card hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between mb-2"><span class="badge badge-green capitalize text-xs">${(s.type||'').replace(/_/g,' ')}</span>${s.isFeatured?'<span class="badge badge-purple text-xs">Featured</span>':''}</div>
+        <h3 class="font-semibold text-dark text-sm mb-1">${s.name}</h3>
+        <p class="text-lg font-bold text-green-600 my-2">${s.amount?.value?'USD '+s.amount.value.toLocaleString():'Full Scholarship'}</p>
+        <p class="text-xs text-gray-400">Deadline: ${new Date(s.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
+        <div class="mt-3 pt-3 border-t border-gray-100"><span class="${s.isActive&&new Date(s.deadline)>=new Date()?'badge-green':'badge-red'} badge text-xs">${s.isActive&&new Date(s.deadline)>=new Date()?'Active':'Closed'}</span></div>
+      </div>`).join('');
+  } catch(err){showToast(err.message,'error');}
+}
+
+document.getElementById('scholarship-form').addEventListener('submit', async(e)=>{
+  e.preventDefault(); const f=e.target;
+  try {
+    await apiCall('/api/v1/scholarships', { method:'POST', body:JSON.stringify({
+      name:f.name.value, type:f.type.value, description:f.description.value,
+      amount:{value:parseFloat(f.amount.value)||0, currency:'USD', isPercentage:false},
+      deadline:f.deadline.value, eligibility:{nationalities:['All'],gpaMinimum:parseFloat(f.gpa.value)||0},
+    })});
+    showToast('Scholarship created!','success'); document.getElementById('add-modal').classList.add('hidden'); f.reset(); loadScholarships();
+  } catch(err){showToast(err.message,'error');}
+});
+loadScholarships();
+</script>
+<%- include('../partials/footer') %>

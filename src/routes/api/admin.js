@@ -1,0 +1,13 @@
+'use strict';
+const express = require('express');
+const router = express.Router();
+const ctrl = require('../../controllers/adminController');
+const { authenticate, authorize } = require('../../middleware/auth');
+router.use(authenticate, authorize('admin','super_admin'));
+router.get('/dashboard', ctrl.getDashboardStats);
+router.get('/users', ctrl.listUsers);
+router.patch('/users/:id/suspend', ctrl.suspendUser);
+router.patch('/universities/:id/verify', ctrl.verifyUniversity);
+router.get('/audit-logs', ctrl.getAuditLogs);
+router.post('/users', ctrl.createAdminUser);
+module.exports = router;

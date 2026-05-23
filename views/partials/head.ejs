@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="UniPortal – International University Admission & Scholarship Platform for USA Universities" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title><%= typeof title !== 'undefined' ? title : 'UniPortal' %></title>
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Fonts: Syne (display) + DM Sans (body) -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+            surface: '#f8fafc',
+            dark: '#0f172a',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.4s ease-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Global Styles -->
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Syne', sans-serif; }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+    .animate-slide-up { animation: slideUp 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+    @keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+    .sidebar-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150; }
+    .sidebar-link:hover { @apply bg-brand-50 text-brand-700; }
+    .sidebar-link.active { @apply bg-brand-600 text-white shadow-sm; }
+    .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6; }
+    .btn-primary { @apply inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all duration-150 text-sm; }
+    .btn-secondary { @apply inline-flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl border border-gray-200 transition-all duration-150 text-sm; }
+    .btn-danger { @apply inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-150 text-sm; }
+    .input-field { @apply w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-150; }
+    .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium; }
+    .badge-blue { @apply badge bg-brand-100 text-brand-700; }
+    .badge-green { @apply badge bg-green-100 text-green-700; }
+    .badge-yellow { @apply badge bg-yellow-100 text-yellow-700; }
+    .badge-red { @apply badge bg-red-100 text-red-700; }
+    .badge-gray { @apply badge bg-gray-100 text-gray-600; }
+    .badge-purple { @apply badge bg-purple-100 text-purple-700; }
+    /* Toast notifications */
+    #toast-container { position:fixed; top:1.5rem; right:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:.5rem; }
+    .toast { display:flex; align-items:center; gap:.75rem; padding:.875rem 1.25rem; border-radius:1rem; font-size:.875rem; font-weight:500; min-width:280px; max-width:380px; box-shadow:0 10px 40px rgba(0,0,0,.12); animation:slideUp .3s ease-out; }
+    .toast-success { background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; }
+    .toast-error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+    .toast-info { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; }
+  </style>
+</head>
+<body class="bg-surface text-dark antialiased">
+<div id="toast-container"></div>

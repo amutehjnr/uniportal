@@ -1,0 +1,239 @@
+<%- include('../partials/head', { title: 'My Profile – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <%- include('../partials/sidebar-student', { user: user, activePage: 'profile' }) %>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="max-w-4xl">
+      <div class="flex items-center justify-between mb-6">
+        <div><h1 class="font-display text-2xl font-bold text-dark">My Profile</h1><p class="text-gray-500 text-sm mt-1">Keep your profile complete to apply faster</p></div>
+        <button id="save-btn" onclick="saveProfile()" class="btn-primary">Save Changes</button>
+      </div>
+
+      <!-- Profile Completion -->
+      <div class="card mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-semibold text-dark text-sm">Profile Completion</span>
+          <span id="pct-label" class="text-brand-600 font-bold text-sm">0%</span>
+        </div>
+        <div class="h-2 bg-gray-100 rounded-full"><div id="pct-bar" class="h-2 bg-brand-500 rounded-full transition-all duration-500" style="width:0%"></div></div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Avatar + Basic -->
+        <div class="space-y-5">
+          <div class="card text-center">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+              <div id="avatar-wrapper" class="w-24 h-24 rounded-2xl bg-brand-100 flex items-center justify-center overflow-hidden">
+                <span id="avatar-initials" class="font-display text-3xl font-bold text-brand-600"><%= user.firstName.charAt(0).toUpperCase() %></span>
+              </div>
+              <label for="avatar-input" class="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-brand-700 transition-colors">
+                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z"/></svg>
+              </label>
+              <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="uploadAvatar(this)" />
+            </div>
+            <p class="font-display font-bold text-dark"><%= user.firstName %> <%= user.lastName %></p>
+            <p class="text-xs text-gray-400 mt-0.5"><%= user.email %></p>
+            <span class="badge badge-blue mt-2 capitalize"><%= user.role.replace('_',' ') %></span>
+          </div>
+
+          <!-- Documents -->
+          <div class="card">
+            <h3 class="font-display font-bold text-dark mb-4">Documents</h3>
+            <div class="space-y-2" id="doc-list">
+              <% [['cv','CV / Resume'],['passport','Passport'],['photo','Passport Photo'],['sop','Statement of Purpose']].forEach(([type, label]) => { %>
+              <div class="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
+                <span class="text-sm text-gray-700"><%= label %></span>
+                <label class="cursor-pointer text-xs text-brand-600 font-medium hover:text-brand-700">
+                  Upload
+                  <input type="file" class="hidden" accept=".pdf,.jpg,.png" onchange="uploadDoc('<%= type %>',this)" />
+                </label>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main form -->
+        <div class="lg:col-span-2 space-y-5">
+          <!-- Personal Info -->
+          <div class="card">
+            <h3 class="font-display font-bold text-dark mb-4">Personal Information</h3>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">Date of Birth</label><input type="date" id="dob" class="input-field" /></div>
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">Gender</label>
+                <select id="gender" class="input-field"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="prefer_not_to_say">Prefer not to say</option></select>
+              </div>
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">Nationality</label><input type="text" id="nationality" placeholder="e.g. Nigerian" class="input-field" /></div>
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">City</label><input type="text" id="city" placeholder="Your city" class="input-field" /></div>
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">Country</label><input type="text" id="country" placeholder="Your country" class="input-field" /></div>
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">Phone</label><input type="tel" id="phone" placeholder="+1 234 567 890" class="input-field" /></div>
+            </div>
+          </div>
+
+          <!-- Education -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-display font-bold text-dark">Education History</h3>
+              <button onclick="addEducation()" class="btn-secondary text-xs py-1.5 px-3">+ Add</button>
+            </div>
+            <div id="education-list" class="space-y-3"></div>
+          </div>
+
+          <!-- Test Scores -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-display font-bold text-dark">Test Scores</h3>
+              <button onclick="addTestScore()" class="btn-secondary text-xs py-1.5 px-3">+ Add</button>
+            </div>
+            <div id="scores-list" class="space-y-3"></div>
+          </div>
+
+          <!-- Study Preferences -->
+          <div class="card">
+            <h3 class="font-display font-bold text-dark mb-4">Study Preferences</h3>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">Desired Intake</label>
+                <select id="intake" class="input-field"><option value="">Any</option><option value="Fall 2025">Fall 2025</option><option value="Spring 2026">Spring 2026</option><option value="Fall 2026">Fall 2026</option></select>
+              </div>
+              <div><label class="block text-xs font-medium text-gray-500 mb-1.5">Budget (USD/year)</label>
+                <div class="flex gap-2"><input type="number" id="budget-min" placeholder="Min" class="input-field" /><input type="number" id="budget-max" placeholder="Max" class="input-field" /></div>
+              </div>
+              <div class="sm:col-span-2"><label class="block text-xs font-medium text-gray-500 mb-1.5">Fields of Interest</label><input type="text" id="fields" placeholder="Computer Science, Business, Engineering…" class="input-field" /></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let profileData = {};
+
+async function loadProfile() {
+  try {
+    const data = await apiCall('/api/v1/profile/student');
+    profileData = data.data;
+    const p = profileData;
+    if (p.dateOfBirth) document.getElementById('dob').value = p.dateOfBirth?.split('T')[0] || '';
+    if (p.gender) document.getElementById('gender').value = p.gender;
+    if (p.nationality) document.getElementById('nationality').value = p.nationality;
+    if (p.address?.city) document.getElementById('city').value = p.address.city;
+    if (p.address?.country) document.getElementById('country').value = p.address.country;
+    if (p.desiredIntake) document.getElementById('intake').value = p.desiredIntake;
+    if (p.budget?.min) document.getElementById('budget-min').value = p.budget.min;
+    if (p.budget?.max) document.getElementById('budget-max').value = p.budget.max;
+    if (p.interestedPrograms?.length) document.getElementById('fields').value = p.interestedPrograms.join(', ');
+
+    // Profile completion bar
+    const pct = p.profileCompletion || 0;
+    document.getElementById('pct-bar').style.width = pct + '%';
+    document.getElementById('pct-label').textContent = pct + '%';
+
+    renderEducation(p.education || []);
+    renderTestScores(p.testScores || []);
+  } catch (err) { showToast('Failed to load profile', 'error'); }
+}
+
+function renderEducation(list) {
+  document.getElementById('education-list').innerHTML = list.length
+    ? list.map((e, i) => `
+      <div class="p-3 bg-gray-50 rounded-xl">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="font-medium text-sm text-dark">${e.institution}</p>
+            <p class="text-xs text-gray-500">${e.degree || ''} ${e.fieldOfStudy ? '· ' + e.fieldOfStudy : ''}</p>
+            <p class="text-xs text-gray-400">${e.startYear || ''} – ${e.endYear || 'Present'} ${e.gpa ? '· GPA ' + e.gpa : ''}</p>
+          </div>
+        </div>
+      </div>`).join('')
+    : '<p class="text-sm text-gray-400">No education history added</p>';
+}
+
+function renderTestScores(list) {
+  document.getElementById('scores-list').innerHTML = list.length
+    ? list.map(s => `
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+        <div><p class="font-medium text-sm text-dark">${s.testName}</p><p class="text-xs text-gray-400">${s.dateGiven ? new Date(s.dateGiven).toLocaleDateString('en-US',{year:'numeric',month:'short'}) : ''}</p></div>
+        <span class="font-display text-lg font-bold text-brand-600">${s.score}</span>
+      </div>`).join('')
+    : '<p class="text-sm text-gray-400">No test scores added</p>';
+}
+
+function addEducation() {
+  const edu = {
+    institution: prompt('Institution name:') || '',
+    degree: prompt('Degree (e.g. Bachelor, Master):') || '',
+    fieldOfStudy: prompt('Field of study:') || '',
+    startYear: parseInt(prompt('Start year:')) || null,
+    endYear: parseInt(prompt('End year (leave blank if current):')) || null,
+    gpa: parseFloat(prompt('GPA (optional):')) || null,
+    country: prompt('Country:') || '',
+  };
+  if (!edu.institution) return;
+  profileData.education = [...(profileData.education || []), edu];
+  renderEducation(profileData.education);
+}
+
+function addTestScore() {
+  const score = {
+    testName: prompt('Test name (IELTS/TOEFL/GRE/GMAT/SAT/ACT/PTE):') || '',
+    score: parseFloat(prompt('Score:')) || 0,
+    dateGiven: prompt('Date (YYYY-MM-DD):') || null,
+  };
+  if (!score.testName || !score.score) return;
+  profileData.testScores = [...(profileData.testScores || []), score];
+  renderTestScores(profileData.testScores);
+}
+
+async function saveProfile() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const updates = {
+      dateOfBirth: document.getElementById('dob').value || undefined,
+      gender: document.getElementById('gender').value || undefined,
+      nationality: document.getElementById('nationality').value || undefined,
+      address: { city: document.getElementById('city').value, country: document.getElementById('country').value },
+      desiredIntake: document.getElementById('intake').value || undefined,
+      budget: { min: parseInt(document.getElementById('budget-min').value) || 0, max: parseInt(document.getElementById('budget-max').value) || 0 },
+      interestedPrograms: document.getElementById('fields').value.split(',').map(s => s.trim()).filter(Boolean),
+      education: profileData.education || [],
+      testScores: profileData.testScores || [],
+    };
+    const data = await apiCall('/api/v1/profile/student', { method: 'PATCH', body: JSON.stringify(updates) });
+    const pct = data.data.profileCompletion || 0;
+    document.getElementById('pct-bar').style.width = pct + '%';
+    document.getElementById('pct-label').textContent = pct + '%';
+    showToast('Profile saved successfully!', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+}
+
+async function uploadAvatar(input) {
+  if (!input.files[0]) return;
+  const fd = new FormData(); fd.append('avatar', input.files[0]);
+  try {
+    const res = await fetch('/api/v1/profile/avatar', { method: 'POST', body: fd, credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    const wrapper = document.getElementById('avatar-wrapper');
+    wrapper.innerHTML = `<img src="${data.data.avatar}" class="w-full h-full object-cover" />`;
+    showToast('Avatar updated!', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function uploadDoc(type, input) {
+  if (!input.files[0]) return;
+  const fd = new FormData(); fd.append('document', input.files[0]);
+  try {
+    const res = await fetch(`/api/v1/profile/document/${type}`, { method: 'POST', body: fd, credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    showToast(`${type.toUpperCase()} uploaded!`, 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+loadProfile();
+</script>
+<%- include('../partials/footer') %>

@@ -1,0 +1,57 @@
+<%- include('../partials/head', { title: 'Universities – UniPortal Admin' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <aside class="w-64 shrink-0 hidden lg:flex flex-col bg-dark min-h-screen sticky top-16 p-5 gap-1">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest px-4 mb-2 mt-2">Admin Panel</p>
+    <a href="/admin/dashboard" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Dashboard</a>
+    <a href="/admin/users" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Users</a>
+    <a href="/admin/universities" class="sidebar-link active text-white">Universities</a>
+    <a href="/admin/payments" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Payments</a>
+    <a href="/admin/scholarships" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Scholarships</a>
+    <a href="/admin/audit-logs" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Audit Logs</a>
+  </aside>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="font-display text-2xl font-bold text-dark">Universities</h1>
+    </div>
+    <div class="card mb-5 flex gap-3 flex-wrap">
+      <select id="verified-filter" class="input-field w-auto" onchange="loadUniversities()">
+        <option value="">All Universities</option><option value="pending">Pending Verification</option><option value="verified">Verified</option>
+      </select>
+    </div>
+    <div id="uni-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </main>
+</div>
+<script>
+async function loadUniversities() {
+  const filter = document.getElementById('verified-filter').value;
+  try {
+    // Admin can see all including unverified
+    const res = await fetch('/api/v1/universities?limit=50' + (filter==='pending'?'&isVerified=false':filter==='verified'?'&isVerified=true':''), { credentials:'include' });
+    const data = await res.json();
+    const grid = document.getElementById('uni-grid');
+    if (!data.data?.length) { grid.innerHTML='<div class="col-span-full card text-center py-8 text-gray-400">No universities found</div>'; return; }
+    grid.innerHTML = data.data.map(u => `
+      <div class="card hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            ${u.logo?`<img src="${u.logo}" class="w-10 h-10 rounded-xl object-cover border border-gray-100"/>`:`<div class="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center font-bold text-brand-600">${u.name.charAt(0)}</div>`}
+            <div><p class="font-semibold text-dark text-sm">${u.name}</p><p class="text-xs text-gray-400">${u.location?.city}, ${u.location?.state}</p></div>
+          </div>
+          <span class="${u.isVerified?'badge-green':'badge-yellow'} badge text-xs">${u.isVerified?'Verified':'Pending'}</span>
+        </div>
+        <p class="text-xs text-gray-500 mb-3 capitalize">${u.type} · ${u.stats?.totalStudents?.toLocaleString()||'—'} students</p>
+        ${!u.isVerified?`<button onclick="verifyUni('${u._id}','${u.name}')" class="btn-primary w-full justify-center text-xs py-2">✓ Verify University</button>`:`<div class="text-xs text-green-600 text-center">✓ Verified ${u.verifiedAt?new Date(u.verifiedAt).toLocaleDateString('en-US',{month:'short',year:'numeric'}):''}</div>`}
+      </div>`).join('');
+  } catch (err) { showToast(err.message,'error'); }
+}
+async function verifyUni(id, name) {
+  if (!confirm(`Verify ${name}?`)) return;
+  try {
+    await apiCall(`/api/v1/admin/universities/${id}/verify`, { method:'PATCH' });
+    showToast(`${name} verified!`,'success'); loadUniversities();
+  } catch (err) { showToast(err.message,'error'); }
+}
+loadUniversities();
+</script>
+<%- include('../partials/footer') %>

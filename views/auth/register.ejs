@@ -1,0 +1,126 @@
+<%- include('../partials/head', { title: 'Create Account – UniPortal' }) %>
+
+<div class="min-h-screen grid lg:grid-cols-2">
+  <!-- Left -->
+  <div class="flex flex-col justify-center px-8 py-12 sm:px-16 lg:px-20 xl:px-28">
+    <div class="w-full max-w-md mx-auto animate-slide-up">
+      <a href="/" class="flex items-center gap-2.5 mb-10">
+        <div class="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+        </div>
+        <span class="font-display font-bold text-xl text-dark">Uni<span class="text-brand-600">Portal</span></span>
+      </a>
+
+      <h1 class="font-display text-3xl font-bold text-dark mb-2">Create your account</h1>
+      <p class="text-gray-500 mb-8">Start your journey to a US university today</p>
+
+      <form id="register-form" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-dark mb-1.5">First Name</label>
+            <input name="firstName" type="text" required placeholder="John" class="input-field" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-dark mb-1.5">Last Name</label>
+            <input name="lastName" type="text" required placeholder="Doe" class="input-field" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-dark mb-1.5">Email Address</label>
+          <input name="email" type="email" required placeholder="you@email.com" class="input-field" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-dark mb-1.5">Password</label>
+          <input name="password" type="password" id="password-input" required placeholder="Min. 8 characters, upper+lower+number" class="input-field" />
+          <div id="password-strength" class="mt-2 hidden">
+            <div class="flex gap-1">
+              <div id="str-1" class="h-1 flex-1 rounded-full bg-gray-200 transition-colors"></div>
+              <div id="str-2" class="h-1 flex-1 rounded-full bg-gray-200 transition-colors"></div>
+              <div id="str-3" class="h-1 flex-1 rounded-full bg-gray-200 transition-colors"></div>
+              <div id="str-4" class="h-1 flex-1 rounded-full bg-gray-200 transition-colors"></div>
+            </div>
+            <p id="str-label" class="text-xs text-gray-400 mt-1"></p>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-dark mb-1.5">Confirm Password</label>
+          <input name="passwordConfirm" type="password" required placeholder="••••••••" class="input-field" />
+        </div>
+
+        <div class="flex items-start gap-3 pt-1">
+          <input type="checkbox" id="terms" required class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+          <label for="terms" class="text-sm text-gray-600">I agree to the <a href="/terms" class="text-brand-600 hover:underline">Terms of Service</a> and <a href="/privacy" class="text-brand-600 hover:underline">Privacy Policy</a></label>
+        </div>
+
+        <button type="submit" id="register-btn" class="btn-primary w-full justify-center py-3 text-base mt-2">
+          Create Account
+        </button>
+      </form>
+
+      <p class="text-center text-sm text-gray-500 mt-6">
+        Already have an account? <a href="/login" class="text-brand-600 font-semibold hover:text-brand-700">Sign in</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Right -->
+  <div class="hidden lg:flex flex-col justify-center bg-gradient-to-br from-brand-50 to-brand-100 px-16">
+    <div class="max-w-md">
+      <h2 class="font-display text-3xl font-bold text-dark mb-4">Join 50,000+ students who found their dream university</h2>
+      <p class="text-gray-600 leading-relaxed mb-8">UniPortal connects international students with top US universities. Apply for programs, discover scholarships, and get your offer letter — all in one place.</p>
+      <div class="grid grid-cols-2 gap-4">
+        <% const stats = [['500+', 'US Universities'], ['$2B+', 'Scholarships'], ['12,000+', 'Admissions/Year'], ['98%', 'Satisfaction Rate']]; %>
+        <% stats.forEach(([val, label]) => { %>
+        <div class="bg-white rounded-2xl p-5 shadow-sm">
+          <p class="font-display text-2xl font-bold text-brand-600"><%= val %></p>
+          <p class="text-sm text-gray-500 mt-1"><%= label %></p>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Password strength meter
+document.getElementById('password-input').addEventListener('input', function() {
+  const val = this.value;
+  document.getElementById('password-strength').classList.toggle('hidden', val.length === 0);
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const colors = ['bg-red-400','bg-orange-400','bg-yellow-400','bg-green-500'];
+  const labels = ['Too weak','Weak','Good','Strong'];
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('str-' + i);
+    el.className = 'h-1 flex-1 rounded-full transition-colors ' + (i <= score ? colors[score - 1] : 'bg-gray-200');
+  }
+  document.getElementById('str-label').textContent = score > 0 ? labels[score - 1] : '';
+});
+
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  if (form.password.value !== form.passwordConfirm.value) {
+    showToast('Passwords do not match.', 'error'); return;
+  }
+  const btn = document.getElementById('register-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Creating account…';
+  try {
+    await apiCall('/api/v1/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ firstName: form.firstName.value, lastName: form.lastName.value, email: form.email.value, password: form.password.value }),
+    });
+    showToast('Account created! Please check your email to verify your address.', 'success');
+    setTimeout(() => window.location.href = '/login', 2000);
+  } catch (err) {
+    showToast(err.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Create Account';
+  }
+});
+</script>
+<%- include('../partials/footer') %>

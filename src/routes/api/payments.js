@@ -1,0 +1,13 @@
+'use strict';
+const express = require('express');
+const router = express.Router();
+const ctrl = require('../../controllers/paymentController');
+const { authenticate, authorize } = require('../../middleware/auth');
+const { uploadDocument } = require('../../config/cloudinary');
+const { uploadLimiter } = require('../../middleware/rateLimiter');
+const { audit } = require('../../middleware/audit');
+router.use(authenticate);
+router.post('/', uploadLimiter, uploadDocument.single('proof'), audit('SUBMIT_PAYMENT','Payment'), ctrl.submitPayment);
+router.get('/', ctrl.getPayments);
+router.patch('/:id/verify', authorize('admin','super_admin'), audit('VERIFY_PAYMENT','Payment'), ctrl.verifyPayment);
+module.exports = router;

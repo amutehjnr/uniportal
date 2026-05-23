@@ -1,0 +1,54 @@
+<%- include('../partials/head', { title: 'Audit Logs – UniPortal Admin' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <aside class="w-64 shrink-0 hidden lg:flex flex-col bg-dark min-h-screen sticky top-16 p-5 gap-1">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest px-4 mb-2 mt-2">Admin Panel</p>
+    <a href="/admin/dashboard" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Dashboard</a>
+    <a href="/admin/users" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Users</a>
+    <a href="/admin/universities" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Universities</a>
+    <a href="/admin/payments" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Payments</a>
+    <a href="/admin/scholarships" class="sidebar-link text-gray-400 hover:text-white hover:bg-white/10">Scholarships</a>
+    <a href="/admin/audit-logs" class="sidebar-link active text-white">Audit Logs</a>
+  </aside>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <div><h1 class="font-display text-2xl font-bold text-dark">Audit Logs</h1><p class="text-gray-500 text-sm mt-1">Immutable record of all platform actions</p></div>
+    </div>
+    <div class="card mb-5 flex gap-3 flex-wrap">
+      <input id="action-filter" type="text" placeholder="Filter by action…" class="input-field w-48" oninput="debounce(loadLogs,400)()" />
+      <input id="resource-filter" type="text" placeholder="Resource (Application, Offer…)" class="input-field w-48" oninput="debounce(loadLogs,400)()" />
+    </div>
+    <div class="card overflow-hidden p-0">
+      <table class="w-full text-sm"><thead class="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
+        <tr><th class="px-5 py-3 text-left font-semibold">User</th><th class="px-5 py-3 text-left font-semibold">Action</th><th class="px-5 py-3 text-left font-semibold">Resource</th><th class="px-5 py-3 text-left font-semibold">Status</th><th class="px-5 py-3 text-left font-semibold">IP</th><th class="px-5 py-3 text-left font-semibold">Time</th></tr>
+      </thead><tbody id="logs-tbody"><tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Loading…</td></tr></tbody></table>
+    </div>
+    <div id="pagination" class="flex justify-center mt-5 gap-2"></div>
+  </main>
+</div>
+<script>
+let currentPage=1, debounceTimer;
+function debounce(fn,d){return function(){clearTimeout(debounceTimer);debounceTimer=setTimeout(fn,d);};}
+async function loadLogs(page=currentPage) {
+  currentPage=page;
+  const action=document.getElementById('action-filter').value;
+  const resource=document.getElementById('resource-filter').value;
+  const params=new URLSearchParams({page,limit:50,...(action&&{action}),...(resource&&{resource})});
+  try {
+    const data=await apiCall(`/api/v1/admin/audit-logs?${params}`);
+    document.getElementById('logs-tbody').innerHTML=data.data.length?data.data.map(l=>`
+      <tr class="border-b border-gray-50 hover:bg-gray-50/50 text-xs">
+        <td class="px-5 py-2.5"><p class="font-medium text-dark">${l.user?l.user.firstName+' '+l.user.lastName:'System'}</p><p class="text-gray-400">${l.userRole||''}</p></td>
+        <td class="px-5 py-2.5 font-mono text-gray-700">${l.action||''}</td>
+        <td class="px-5 py-2.5 text-gray-600">${l.resource||''}</td>
+        <td class="px-5 py-2.5"><span class="${l.status==='success'?'badge-green':'badge-red'} badge text-xs">${l.status}</span></td>
+        <td class="px-5 py-2.5 font-mono text-gray-400">${l.ipAddress||'—'}</td>
+        <td class="px-5 py-2.5 text-gray-400">${new Date(l.createdAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+      </tr>`).join(''):'<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">No logs found</td></tr>';
+    const {pages,page:pg}=data.pagination;
+    if(pages>1) document.getElementById('pagination').innerHTML=Array.from({length:pages},(_,i)=>i+1).map(p=>`<button onclick="loadLogs(${p})" class="${p===pg?'btn-primary':'btn-secondary'} text-xs py-1.5 px-3">${p}</button>`).join('');
+  } catch (err) { showToast(err.message,'error'); }
+}
+loadLogs();
+</script>
+<%- include('../partials/footer') %>

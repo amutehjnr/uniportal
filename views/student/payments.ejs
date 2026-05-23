@@ -1,0 +1,159 @@
+<%- include('../partials/head', { title: 'Payments – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <%- include('../partials/sidebar-student', { user: user, activePage: 'payments' }) %>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="max-w-4xl">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="font-display text-2xl font-bold text-dark">Payments</h1>
+        <button onclick="document.getElementById('submit-modal').classList.remove('hidden')" class="btn-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Submit Payment
+        </button>
+      </div>
+
+      <!-- Info Banner -->
+      <div class="card bg-brand-50 border-brand-200 mb-6">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-brand-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div>
+            <p class="font-semibold text-brand-800 text-sm">Manual Payment Verification</p>
+            <p class="text-brand-700 text-xs mt-1">UniPortal uses manual payment verification. Upload your proof of payment and our admin team will verify it within 1-2 business days. Accepted methods: Bank Transfer, Western Union, MoneyGram, PayPal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="payments-list" class="space-y-4">
+        <div class="animate-pulse space-y-4"><% for(let i=0;i<3;i++) { %><div class="card h-20"></div><% } %></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Submit Payment Modal -->
+<div id="submit-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-slide-up">
+    <div class="p-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <h3 class="font-display text-xl font-bold text-dark">Submit Payment</h3>
+        <button onclick="document.getElementById('submit-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <form id="payment-form" class="p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-dark mb-1.5">Payment Type</label>
+          <select name="type" required class="input-field">
+            <option value="application_fee">Application Fee</option>
+            <option value="deposit">Enrollment Deposit</option>
+            <option value="tuition">Tuition Fee</option>
+            <option value="visa">Visa Fee</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-dark mb-1.5">Payment Method</label>
+          <select name="method" required class="input-field">
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="western_union">Western Union</option>
+            <option value="moneygram">MoneyGram</option>
+            <option value="paypal">PayPal</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-dark mb-1.5">Amount</label>
+          <input type="number" name="amount" required min="1" step="0.01" placeholder="0.00" class="input-field" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-dark mb-1.5">Currency</label>
+          <select name="currency" class="input-field">
+            <option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="KES">KES</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Sender Name</label>
+        <input type="text" name="senderName" required placeholder="Name on receipt" class="input-field" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Transaction ID / Reference</label>
+        <input type="text" name="transactionId" placeholder="Bank transaction ID" class="input-field" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Payment Date</label>
+        <input type="date" name="paymentDate" required class="input-field" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Proof of Payment <span class="text-red-500">*</span></label>
+        <input type="file" name="proof" id="proof-file" required accept=".pdf,.jpg,.jpeg,.png" class="input-field text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-brand-100 file:text-brand-700" />
+        <p class="text-xs text-gray-400 mt-1">Upload receipt/screenshot. Max 10MB. PDF, JPG, PNG accepted.</p>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('submit-modal').classList.add('hidden')" class="btn-secondary flex-1 justify-center">Cancel</button>
+        <button type="submit" id="submit-btn" class="btn-primary flex-1 justify-center">Submit Payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const STATUS_COLORS = { pending:'badge-gray', submitted:'badge-yellow', under_review:'badge-yellow', verified:'badge-green', rejected:'badge-red', refunded:'badge-blue' };
+
+async function loadPayments() {
+  try {
+    const data = await apiCall('/api/v1/payments');
+    const container = document.getElementById('payments-list');
+    if (!data.data.length) {
+      container.innerHTML = '<div class="card text-center py-12"><p class="text-gray-400">No payments yet</p></div>'; return;
+    }
+    container.innerHTML = data.data.map(p => `
+      <div class="card hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="${STATUS_COLORS[p.status]||'badge-gray'}">${p.status}</span>
+              <span class="text-xs text-gray-400 capitalize">${(p.type||'').replace(/_/g,' ')}</span>
+            </div>
+            <p class="font-display text-xl font-bold text-dark">${p.currency} ${parseFloat(p.amount).toLocaleString()}</p>
+            <p class="text-xs text-gray-500 mt-1">Ref: <span class="font-mono">${p.reference}</span></p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-gray-400">Method: <span class="font-medium text-gray-600 capitalize">${(p.method||'').replace(/_/g,' ')}</span></p>
+            <p class="text-xs text-gray-400 mt-1">${new Date(p.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}</p>
+            ${p.proofOfPayment?.url ? `<a href="${p.proofOfPayment.url}" target="_blank" class="text-xs text-brand-600 hover:underline mt-1 block">View Proof →</a>` : ''}
+          </div>
+        </div>
+        ${p.status === 'rejected' && p.rejectionReason ? `<div class="mt-3 pt-3 border-t border-red-100 text-xs text-red-600"><strong>Rejection reason:</strong> ${p.rejectionReason}</div>` : ''}
+        ${p.adminNotes ? `<div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500"><strong>Admin note:</strong> ${p.adminNotes}</div>` : ''}
+      </div>`).join('');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+document.getElementById('payment-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  try {
+    const formData = new FormData(e.target);
+    const res = await fetch('/api/v1/payments', { method:'POST', body:formData, credentials:'include' });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    showToast('Payment submitted! Awaiting admin verification.', 'success');
+    document.getElementById('submit-modal').classList.add('hidden');
+    e.target.reset();
+    loadPayments();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit Payment';
+  }
+});
+
+loadPayments();
+</script>
+<%- include('../partials/footer') %>

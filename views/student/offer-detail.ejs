@@ -1,0 +1,145 @@
+<%- include('../partials/head', { title: 'Offer Letter – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <%- include('../partials/sidebar-student', { user: user, activePage: 'offers' }) %>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="max-w-3xl">
+      <a href="/student/offers" class="flex items-center gap-2 text-sm text-gray-500 hover:text-brand-600 mb-6">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Back to Offers
+      </a>
+
+      <div id="offer-content">
+        <div class="card animate-pulse h-64"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Accept/Decline Modal -->
+<div id="respond-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slide-up">
+    <h3 id="modal-title" class="font-display text-xl font-bold text-dark mb-2"></h3>
+    <p id="modal-body" class="text-gray-500 text-sm mb-6"></p>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="btn-secondary flex-1 justify-center">Cancel</button>
+      <button id="modal-confirm" class="flex-1 justify-center font-medium px-5 py-2.5 rounded-xl transition-all text-sm"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const offerId = window.location.pathname.split('/').pop();
+let offerData = null;
+
+async function loadOffer() {
+  try {
+    const data = await apiCall(`/api/v1/offers/${offerId}`);
+    offerData = data.data;
+    renderOffer(offerData);
+  } catch (err) {
+    document.getElementById('offer-content').innerHTML = `<div class="card text-center py-8 text-red-500">${err.message}</div>`;
+  }
+}
+
+function renderOffer(offer) {
+  const isPending = offer.status === 'pending';
+  const isExpired = new Date(offer.expiresAt) < new Date();
+  const STATUS_STYLE = { pending:'badge-blue', accepted:'badge-green', declined:'badge-red', expired:'badge-gray', cancelled:'badge-gray' };
+
+  document.getElementById('offer-content').innerHTML = `
+    <!-- Offer Card -->
+    <div class="card border-2 ${isPending && !isExpired ? 'border-brand-200' : 'border-gray-100'} mb-6">
+      <!-- Header -->
+      <div class="flex items-start justify-between mb-6">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl overflow-hidden bg-brand-100">
+            ${offer.university?.logo ? `<img src="${offer.university.logo}" class="w-full h-full object-cover" />` : `<div class="w-full h-full flex items-center justify-center font-display font-bold text-brand-600 text-2xl">${(offer.university?.name||'U').charAt(0)}</div>`}
+          </div>
+          <div>
+            <h1 class="font-display text-2xl font-bold text-dark">${offer.university?.name}</h1>
+            <p class="text-gray-500">${offer.program?.name} · ${offer.program?.degree}</p>
+            <p class="text-xs text-gray-400 mt-1">Offer Ref: ${offer.offerNumber}</p>
+          </div>
+        </div>
+        <span class="${STATUS_STYLE[offer.status] || 'badge-gray'} text-sm px-3 py-1">${offer.status.charAt(0).toUpperCase()+offer.status.slice(1)}</span>
+      </div>
+
+      <!-- Offer type badge -->
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl mb-6 ${offer.type === 'unconditional' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-sm font-medium">${offer.type === 'unconditional' ? 'Unconditional Offer' : 'Conditional Offer'}</span>
+      </div>
+
+      <!-- Details grid -->
+      <div class="grid sm:grid-cols-2 gap-4 mb-6">
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Intake</p>
+          <p class="font-semibold text-dark">${offer.intake} ${offer.intakeYear}</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Tuition Fee</p>
+          <p class="font-semibold text-dark">${offer.tuitionFee?.amount ? 'USD ' + offer.tuitionFee.amount.toLocaleString() + ' / ' + (offer.tuitionFee.per || 'year') : '—'}</p>
+        </div>
+        ${offer.scholarshipAmount?.amount ? `
+        <div class="bg-green-50 rounded-xl p-4">
+          <p class="text-xs text-green-600 font-medium uppercase tracking-wide mb-1">Scholarship</p>
+          <p class="font-semibold text-green-700">USD ${offer.scholarshipAmount.amount.toLocaleString()}</p>
+          ${offer.scholarshipAmount.description ? `<p class="text-xs text-green-600 mt-0.5">${offer.scholarshipAmount.description}</p>` : ''}
+        </div>` : ''}
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Offer Expires</p>
+          <p class="font-semibold ${isExpired ? 'text-red-600' : 'text-dark'}">${new Date(offer.expiresAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</p>
+        </div>
+      </div>
+
+      ${offer.conditions?.length ? `
+      <div class="mb-6">
+        <p class="text-sm font-semibold text-dark mb-2">Conditions of Offer:</p>
+        <ul class="space-y-2">
+          ${offer.conditions.map(c => `<li class="flex items-start gap-2 text-sm text-gray-600"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>${c}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      <!-- Actions -->
+      ${isPending && !isExpired ? `
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
+        ${offer.pdfUrl ? `<a href="${offer.pdfUrl}" target="_blank" class="btn-secondary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Download PDF</a>` : ''}
+        <button onclick="openRespondModal('declined')" class="btn-secondary text-red-600 border-red-200 hover:bg-red-50">Decline Offer</button>
+        <button onclick="openRespondModal('accepted')" class="btn-primary bg-green-600 hover:bg-green-700 flex-1 justify-center">🎉 Accept Offer</button>
+      </div>` : `
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
+        ${offer.pdfUrl ? `<a href="${offer.pdfUrl}" target="_blank" class="btn-secondary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Download PDF</a>` : ''}
+      </div>`}
+    </div>`;
+}
+
+function openRespondModal(response) {
+  const isAccept = response === 'accepted';
+  document.getElementById('modal-title').textContent = isAccept ? 'Accept This Offer?' : 'Decline This Offer?';
+  document.getElementById('modal-body').textContent = isAccept
+    ? 'By accepting this offer, you confirm your intention to enroll. This will notify the university admissions office.'
+    : 'Are you sure you want to decline this offer? This action cannot be undone.';
+  const btn = document.getElementById('modal-confirm');
+  btn.textContent = isAccept ? 'Yes, Accept Offer' : 'Yes, Decline';
+  btn.className = `flex-1 justify-center font-medium px-5 py-2.5 rounded-xl transition-all text-sm text-white ${isAccept ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`;
+  btn.onclick = () => respondToOffer(response);
+  document.getElementById('respond-modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('respond-modal').classList.add('hidden'); }
+
+async function respondToOffer(response) {
+  try {
+    await apiCall(`/api/v1/offers/${offerId}/respond`, { method: 'PATCH', body: JSON.stringify({ response }) });
+    closeModal();
+    showToast(`Offer ${response === 'accepted' ? 'accepted' : 'declined'} successfully.`, response === 'accepted' ? 'success' : 'info');
+    setTimeout(loadOffer, 1000);
+  } catch (err) {
+    showToast(err.message, 'error');
+    closeModal();
+  }
+}
+
+loadOffer();
+</script>
+<%- include('../partials/footer') %>

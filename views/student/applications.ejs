@@ -1,0 +1,114 @@
+<%- include('../partials/head', { title: 'My Applications – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <%- include('../partials/sidebar-student', { user: user, activePage: 'applications' }) %>
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="max-w-5xl">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="font-display text-2xl font-bold text-dark">My Applications</h1>
+          <p class="text-gray-500 text-sm mt-1">Track and manage all your university applications</p>
+        </div>
+        <a href="/universities" class="btn-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New Application
+        </a>
+      </div>
+
+      <!-- Filters -->
+      <div class="card mb-6">
+        <div class="flex flex-wrap gap-3">
+          <select id="status-filter" class="input-field w-auto" onchange="loadApplications()">
+            <option value="">All Statuses</option>
+            <option value="draft">Draft</option>
+            <option value="submitted">Submitted</option>
+            <option value="under_review">Under Review</option>
+            <option value="documents_requested">Documents Requested</option>
+            <option value="offer_extended">Offer Extended</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Applications List -->
+      <div id="apps-container" class="space-y-4"></div>
+      <div id="pagination" class="flex justify-center mt-6 gap-2"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const STATUS_COLORS = { draft:'badge-gray', submitted:'badge-blue', under_review:'badge-yellow', documents_requested:'badge-yellow', interview_scheduled:'badge-blue', offer_extended:'badge-purple', accepted:'badge-green', rejected:'badge-red', withdrawn:'badge-gray', enrolled:'badge-green', waitlisted:'badge-yellow' };
+const STATUS_STEPS = ['draft','submitted','under_review','offer_extended','accepted','enrolled'];
+
+let currentPage = 1;
+
+async function loadApplications(page = 1) {
+  currentPage = page;
+  const status = document.getElementById('status-filter').value;
+  const params = new URLSearchParams({ page, limit: 10, ...(status && { status }) });
+  const container = document.getElementById('apps-container');
+  container.innerHTML = '<div class="space-y-4">' + [1,2,3].map(() => '<div class="card animate-pulse h-28 bg-gray-50"></div>').join('') + '</div>';
+
+  try {
+    const data = await apiCall(`/api/v1/applications?${params}`);
+    if (!data.data.length) {
+      container.innerHTML = `<div class="card text-center py-16">
+        <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <p class="text-gray-500 font-medium">No applications found</p>
+        <p class="text-gray-400 text-sm mt-1">Start by browsing universities</p>
+        <a href="/universities" class="btn-primary mt-4">Browse Universities</a>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = data.data.map(app => {
+      const stepIdx = STATUS_STEPS.indexOf(app.status);
+      const progressPct = stepIdx >= 0 ? Math.round((stepIdx / (STATUS_STEPS.length - 1)) * 100) : 0;
+      return `
+      <div class="card hover:shadow-md transition-shadow">
+        <div class="flex items-start gap-4">
+          <div class="w-14 h-14 rounded-xl overflow-hidden bg-brand-100 shrink-0 border border-gray-100">
+            ${app.university?.logo ? `<img src="${app.university.logo}" class="w-full h-full object-cover" alt="${app.university.name}" />` : `<div class="w-full h-full flex items-center justify-center font-display font-bold text-brand-600 text-lg">${(app.university?.name||'U').charAt(0)}</div>`}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2 flex-wrap">
+              <div>
+                <h3 class="font-display font-bold text-dark">${app.university?.name || '—'}</h3>
+                <p class="text-sm text-gray-500">${app.program?.name || '—'} · <span class="text-brand-600">${app.program?.degree || ''}</span></p>
+                <p class="text-xs text-gray-400 mt-0.5">${app.intake} ${app.intakeYear} · Ref: ${app.applicationNumber}</p>
+              </div>
+              <span class="${STATUS_COLORS[app.status] || 'badge-gray'} text-xs">${app.status.replace(/_/g,' ')}</span>
+            </div>
+            <!-- Progress bar -->
+            <div class="mt-4">
+              <div class="flex justify-between text-xs text-gray-400 mb-1">
+                <span>Progress</span><span>${progressPct}%</span>
+              </div>
+              <div class="h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-brand-500 rounded-full transition-all" style="width:${progressPct}%"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+          <span class="text-xs text-gray-400">Applied ${new Date(app.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}</span>
+          <a href="/student/applications/${app._id}" class="btn-secondary text-xs py-1.5 px-3">View Details →</a>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Pagination
+    const { pages, page: pg } = data.pagination;
+    if (pages > 1) {
+      document.getElementById('pagination').innerHTML = Array.from({length: pages}, (_,i) => i+1).map(p =>
+        `<button onclick="loadApplications(${p})" class="${p===pg?'btn-primary':'btn-secondary'} text-xs py-1.5 px-3">${p}</button>`
+      ).join('');
+    }
+  } catch (err) {
+    container.innerHTML = `<div class="card text-center py-8 text-red-500">${err.message}</div>`;
+  }
+}
+
+loadApplications();
+</script>
+<%- include('../partials/footer') %>

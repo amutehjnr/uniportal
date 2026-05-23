@@ -1,0 +1,16 @@
+'use strict';
+const express = require('express');
+const router = express.Router();
+const ctrl = require('../../controllers/applicationController');
+const { authenticate, authorize } = require('../../middleware/auth');
+const { uploadDocument } = require('../../config/cloudinary');
+const { uploadLimiter, writeLimiter } = require('../../middleware/rateLimiter');
+const { audit } = require('../../middleware/audit');
+router.use(authenticate);
+router.post('/', writeLimiter, audit('CREATE_APPLICATION','Application'), ctrl.createApplication);
+router.get('/', ctrl.getMyApplications);
+router.get('/:id', ctrl.getApplicationById);
+router.patch('/:id/submit', audit('SUBMIT_APPLICATION','Application'), ctrl.submitApplication);
+router.patch('/:id/status', authorize('admin','super_admin','admission_officer','university'), audit('UPDATE_STATUS','Application'), ctrl.updateApplicationStatus);
+router.post('/:id/documents', uploadLimiter, uploadDocument.single('document'), audit('UPLOAD_DOC','Application'), ctrl.uploadDocument);
+module.exports = router;

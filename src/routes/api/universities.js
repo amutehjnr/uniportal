@@ -1,0 +1,12 @@
+'use strict';
+const express = require('express');
+const router = express.Router();
+const ctrl = require('../../controllers/universityController');
+const { authenticate, authorize } = require('../../middleware/auth');
+router.get('/', ctrl.listUniversities);
+router.get('/:slug', ctrl.getUniversity);
+router.get('/:universityId/programs', ctrl.listPrograms);
+router.use(authenticate);
+router.get('/dashboard/stats', authorize('university','admission_officer'), ctrl.getDashboard);
+router.post('/programs', authorize('university','admin','super_admin'), ctrl.createProgram);
+module.exports = router;

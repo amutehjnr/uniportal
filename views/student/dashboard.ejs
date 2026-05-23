@@ -1,0 +1,159 @@
+<%- include('../partials/head', { title: 'My Dashboard – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+
+<div class="flex min-h-[calc(100vh-64px)]">
+  <%- include('../partials/sidebar-student', { user: user, activePage: 'dashboard' }) %>
+
+  <main class="flex-1 p-6 lg:p-8 max-w-6xl animate-fade-in">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="font-display text-2xl font-bold text-dark">Good morning, <%= user.firstName %>! 👋</h1>
+      <p class="text-gray-500 mt-1">Here's what's happening with your applications</p>
+    </div>
+
+    <!-- Profile completion banner -->
+    <div id="profile-banner" class="hidden mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-4">
+      <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-medium text-amber-800 text-sm">Complete your profile to apply</p>
+        <div class="flex items-center gap-2 mt-1.5">
+          <div class="flex-1 bg-amber-200 rounded-full h-1.5">
+            <div id="profile-bar" class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
+          </div>
+          <span id="profile-pct" class="text-xs text-amber-700 font-medium shrink-0">0%</span>
+        </div>
+      </div>
+      <a href="/student/profile" class="btn-secondary text-amber-700 border-amber-300 hover:bg-amber-100 shrink-0">Complete Now</a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <% const statCards = [
+        { id: 'stat-applications', label: 'Applications', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'blue' },
+        { id: 'stat-offers', label: 'Offers Received', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', color: 'green' },
+        { id: 'stat-scholarships', label: 'Scholarships', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'purple' },
+        { id: 'stat-messages', label: 'Unread Messages', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', color: 'orange' },
+      ]; %>
+      <% statCards.forEach(s => { %>
+      <div class="card group hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 bg-<%= s.color === 'blue' ? 'brand' : s.color %>-100 rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5 text-<%= s.color === 'blue' ? 'brand' : s.color %>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<%= s.icon %>"/>
+            </svg>
+          </div>
+        </div>
+        <p id="<%= s.id %>" class="font-display text-2xl font-bold text-dark">—</p>
+        <p class="text-sm text-gray-500 mt-1"><%= s.label %></p>
+      </div>
+      <% }); %>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <!-- Recent Applications -->
+      <div class="lg:col-span-2 card">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="font-display font-bold text-dark">Recent Applications</h2>
+          <a href="/student/applications" class="text-xs text-brand-600 font-medium hover:text-brand-700">View all →</a>
+        </div>
+        <div id="recent-apps" class="space-y-3">
+          <div class="animate-pulse space-y-3">
+            <% for(let i=0;i<3;i++) { %><div class="h-16 bg-gray-100 rounded-xl"></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions + Deadlines -->
+      <div class="space-y-6">
+        <div class="card">
+          <h2 class="font-display font-bold text-dark mb-4">Quick Actions</h2>
+          <div class="space-y-2">
+            <a href="/universities" class="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-50 transition-colors group">
+              <div class="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center group-hover:bg-brand-600 transition-colors">
+                <svg class="w-4 h-4 text-brand-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+              <span class="text-sm font-medium text-gray-700">Browse Universities</span>
+            </a>
+            <a href="/scholarships" class="flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition-colors group">
+              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-600 transition-colors">
+                <svg class="w-4 h-4 text-green-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <span class="text-sm font-medium text-gray-700">Find Scholarships</span>
+            </a>
+            <a href="/student/profile" class="flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition-colors group">
+              <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-600 transition-colors">
+                <svg class="w-4 h-4 text-purple-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              </div>
+              <span class="text-sm font-medium text-gray-700">Update Profile</span>
+            </a>
+            <a href="/student/payments" class="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 transition-colors group">
+              <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-600 transition-colors">
+                <svg class="w-4 h-4 text-orange-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              </div>
+              <span class="text-sm font-medium text-gray-700">Submit Payment</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const STATUS_COLORS = {
+  draft:'badge-gray', submitted:'badge-blue', under_review:'badge-yellow',
+  offer_extended:'badge-purple', accepted:'badge-green', rejected:'badge-red',
+  withdrawn:'badge-gray', enrolled:'badge-green', waitlisted:'badge-yellow',
+  documents_requested:'badge-yellow', interview_scheduled:'badge-blue',
+};
+
+async function loadDashboard() {
+  try {
+    const [appData, profileData] = await Promise.all([
+      apiCall('/api/v1/applications?limit=5'),
+      apiCall('/api/v1/profile/student').catch(() => null),
+    ]);
+
+    // Stats
+    document.getElementById('stat-applications').textContent = appData.pagination?.total || 0;
+    const offers = appData.data.filter(a => a.status === 'offer_extended' || a.status === 'accepted').length;
+    document.getElementById('stat-offers').textContent = offers;
+    document.getElementById('stat-scholarships').textContent = '—';
+    document.getElementById('stat-messages').textContent = '—';
+
+    // Profile completion
+    if (profileData && profileData.data.profileCompletion < 80) {
+      const pct = profileData.data.profileCompletion;
+      document.getElementById('profile-banner').classList.remove('hidden');
+      document.getElementById('profile-bar').style.width = pct + '%';
+      document.getElementById('profile-pct').textContent = pct + '%';
+    }
+
+    // Recent applications
+    const container = document.getElementById('recent-apps');
+    if (!appData.data.length) {
+      container.innerHTML = '<div class="text-center py-8 text-gray-400"><p class="text-sm">No applications yet</p><a href="/universities" class="btn-primary mt-3 text-xs">Browse Universities</a></div>';
+      return;
+    }
+    container.innerHTML = appData.data.map(app => `
+      <a href="/student/applications/${app._id}" class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+        <div class="w-10 h-10 rounded-xl overflow-hidden bg-brand-100 shrink-0">
+          ${app.university?.logo ? `<img src="${app.university.logo}" class="w-full h-full object-cover" />` : `<div class="w-full h-full flex items-center justify-center font-bold text-brand-600 text-xs">${(app.university?.name||'U').charAt(0)}</div>`}
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium text-dark truncate">${app.university?.name || '—'}</p>
+          <p class="text-xs text-gray-500 truncate">${app.program?.name || '—'} · ${app.program?.degree || ''}</p>
+        </div>
+        <span class="${STATUS_COLORS[app.status] || 'badge-gray'}">${app.status.replace(/_/g,' ')}</span>
+      </a>
+    `).join('');
+  } catch (err) {
+    console.error('Dashboard load error:', err);
+  }
+}
+
+loadDashboard();
+</script>
+<%- include('../partials/footer') %>

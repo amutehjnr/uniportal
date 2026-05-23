@@ -1,0 +1,243 @@
+<%- include('../partials/head', { title: 'UniPortal – Find Your Dream US University' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+
+<!-- Hero -->
+<section class="relative min-h-[88vh] flex items-center overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-brand-900 via-brand-800 to-dark"></div>
+  <div class="absolute inset-0" style="background-image:radial-gradient(circle at 15% 85%, rgba(96,165,250,0.15) 0%, transparent 40%), radial-gradient(circle at 85% 15%, rgba(129,140,248,0.15) 0%, transparent 40%)"></div>
+  <!-- Grid pattern -->
+  <div class="absolute inset-0 opacity-5" style="background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);background-size:60px 60px"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
+    <div class="max-w-3xl animate-slide-up">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur rounded-full text-xs font-medium text-white/80 mb-8 border border-white/10">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+        500+ US Universities · Live Applications · Real Scholarships
+      </div>
+      <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
+        Your <span class="text-brand-300">gateway</span> to US universities
+      </h1>
+      <p class="text-xl text-brand-200 leading-relaxed mb-10 max-w-2xl">
+        Apply to top-ranked US universities, discover billions in scholarships, and track every step of your admission journey — completely free.
+      </p>
+      <div class="flex flex-wrap gap-4">
+        <a href="/register" class="btn-primary text-base px-8 py-3.5 shadow-lg shadow-brand-900/50">Get Started Free</a>
+        <a href="/universities" class="btn-secondary text-base px-8 py-3.5 bg-white/10 text-white border-white/20 hover:bg-white/20">Browse Universities</a>
+      </div>
+
+      <!-- Stats row -->
+      <div class="flex flex-wrap gap-8 mt-12">
+        <% [['500+','Universities'],['$2B+','Scholarships'],['50K+','Students'],['98%','Satisfaction']].forEach(([v,l]) => { %>
+        <div>
+          <p class="font-display text-2xl font-bold text-white"><%= v %></p>
+          <p class="text-sm text-brand-300"><%= l %></p>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Search Section -->
+<section class="bg-white py-12 border-b border-gray-100">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-brand-50 rounded-2xl p-6 border border-brand-100">
+      <h2 class="font-display text-xl font-bold text-dark mb-4 text-center">Find Your Perfect Program</h2>
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1.5">Degree Level</label>
+          <select id="search-degree" class="input-field">
+            <option value="">Any Degree</option>
+            <option>Bachelor</option><option>Master</option><option>MBA</option><option>PhD</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1.5">Field of Study</label>
+          <input id="search-field" type="text" placeholder="e.g. Computer Science" class="input-field" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1.5">Intake</label>
+          <select id="search-intake" class="input-field">
+            <option value="">Any Intake</option>
+            <option>Fall</option><option>Spring</option><option>Summer</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="searchPrograms()" class="btn-primary w-full justify-center mt-4">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Search Programs
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Universities -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <h2 class="font-display text-4xl font-bold text-dark mb-4">Featured Universities</h2>
+      <p class="text-gray-500 text-lg max-w-xl mx-auto">Explore verified US universities accepting international students right now</p>
+    </div>
+    <div id="featured-unis" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% for(let i=0;i<6;i++) { %>
+      <div class="rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+        <div class="h-40 bg-gray-100"></div>
+        <div class="p-5 space-y-3"><div class="h-4 bg-gray-100 rounded w-3/4"></div><div class="h-3 bg-gray-100 rounded w-1/2"></div></div>
+      </div>
+      <% } %>
+    </div>
+    <div class="text-center mt-10">
+      <a href="/universities" class="btn-secondary text-base px-8 py-3">View All Universities →</a>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-20 bg-surface">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <h2 class="font-display text-4xl font-bold text-dark mb-4">How UniPortal Works</h2>
+      <p class="text-gray-500 text-lg">Your journey from application to enrollment in 4 simple steps</p>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <% const steps = [
+        { num: '01', title: 'Create Profile', desc: 'Build your student profile with education history, test scores, and documents.', color: 'brand' },
+        { num: '02', title: 'Discover & Apply', desc: 'Browse 500+ universities and programs. Apply in minutes with your saved profile.', color: 'purple' },
+        { num: '03', title: 'Track Progress', desc: 'Follow your application in real-time. Chat directly with admission officers.', color: 'green' },
+        { num: '04', title: 'Accept & Enroll', desc: 'Receive your offer letter digitally. Accept and complete enrollment online.', color: 'orange' },
+      ]; %>
+      <% steps.forEach(s => { %>
+      <div class="text-center group">
+        <div class="w-16 h-16 mx-auto bg-<%= s.color === 'brand' ? 'brand' : s.color %>-100 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+          <span class="font-display text-xl font-bold text-<%= s.color === 'brand' ? 'brand' : s.color %>-600"><%= s.num %></span>
+        </div>
+        <h3 class="font-display font-bold text-dark mb-2"><%= s.title %></h3>
+        <p class="text-sm text-gray-500 leading-relaxed"><%= s.desc %></p>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Scholarships -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <h2 class="font-display text-4xl font-bold text-dark mb-2">Open Scholarships</h2>
+        <p class="text-gray-500">Billions in funding available for international students</p>
+      </div>
+      <a href="/scholarships" class="btn-secondary">View All →</a>
+    </div>
+    <div id="featured-scholarships" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% for(let i=0;i<3;i++) { %>
+      <div class="card animate-pulse"><div class="h-24 bg-gray-100 rounded-xl"></div></div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-24 bg-brand-900 relative overflow-hidden">
+  <div class="absolute inset-0" style="background-image:radial-gradient(circle at 50% 50%, rgba(96,165,250,0.1) 0%, transparent 60%)"></div>
+  <div class="relative max-w-3xl mx-auto px-4 text-center">
+    <h2 class="font-display text-5xl font-bold text-white mb-6">Ready to start your US education journey?</h2>
+    <p class="text-brand-200 text-xl mb-10">Join 50,000+ students who found their dream university through UniPortal.</p>
+    <a href="/register" class="btn-primary text-lg px-10 py-4 shadow-2xl shadow-brand-900">Create Free Account →</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-dark text-gray-400 py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg></div>
+          <span class="font-display font-bold text-white">UniPortal</span>
+        </div>
+        <p class="text-sm leading-relaxed">International university admission platform for USA universities.</p>
+      </div>
+      <div>
+        <h4 class="font-semibold text-white mb-3">Platform</h4>
+        <div class="space-y-2 text-sm"><a href="/universities" class="block hover:text-white transition-colors">Universities</a><a href="/programs" class="block hover:text-white transition-colors">Programs</a><a href="/scholarships" class="block hover:text-white transition-colors">Scholarships</a></div>
+      </div>
+      <div>
+        <h4 class="font-semibold text-white mb-3">Company</h4>
+        <div class="space-y-2 text-sm"><a href="/about" class="block hover:text-white transition-colors">About Us</a><a href="/contact" class="block hover:text-white transition-colors">Contact</a><a href="/blog" class="block hover:text-white transition-colors">Blog</a></div>
+      </div>
+      <div>
+        <h4 class="font-semibold text-white mb-3">Legal</h4>
+        <div class="space-y-2 text-sm"><a href="/privacy" class="block hover:text-white transition-colors">Privacy Policy</a><a href="/terms" class="block hover:text-white transition-colors">Terms of Service</a></div>
+      </div>
+    </div>
+    <div class="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
+      <p>© <%= new Date().getFullYear() %> UniPortal. All rights reserved.</p>
+      <p>Built with ❤️ for international students worldwide</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+async function loadHomePage() {
+  try {
+    const [unisData, scholData] = await Promise.all([
+      fetch('/api/v1/universities?limit=6&sort=-createdAt').then(r=>r.json()),
+      fetch('/api/v1/scholarships?limit=3').then(r=>r.json()),
+    ]);
+
+    // Universities
+    const uniContainer = document.getElementById('featured-unis');
+    if (unisData.data?.length) {
+      uniContainer.innerHTML = unisData.data.map(u => `
+        <a href="/universities/${u.slug}" class="rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group">
+          <div class="h-40 bg-gradient-to-br from-brand-100 to-brand-50 relative overflow-hidden flex items-center justify-center">
+            ${u.coverImage ? `<img src="${u.coverImage}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />` : `<div class="font-display text-5xl font-bold text-brand-200">${u.name.charAt(0)}</div>`}
+            ${u.featured ? '<span class="absolute top-3 right-3 badge badge-blue text-xs">Featured</span>' : ''}
+          </div>
+          <div class="p-5">
+            <div class="flex items-start gap-3">
+              ${u.logo ? `<img src="${u.logo}" class="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0" />` : `<div class="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center shrink-0 font-bold text-brand-600">${u.name.charAt(0)}</div>`}
+              <div class="min-w-0">
+                <h3 class="font-display font-bold text-dark text-sm leading-tight">${u.name}</h3>
+                <p class="text-xs text-gray-500 mt-0.5">${u.location?.city}, ${u.location?.state} · ${u.type||''}</p>
+              </div>
+            </div>
+            ${u.ranking?.usnews ? `<div class="mt-3 text-xs text-brand-600 font-medium">#${u.ranking.usnews} US News Rankings</div>` : ''}
+          </div>
+        </a>`).join('');
+    }
+
+    // Scholarships
+    const scholContainer = document.getElementById('featured-scholarships');
+    if (scholData.data?.length) {
+      scholContainer.innerHTML = scholData.data.map(s => `
+        <a href="/scholarships/${s._id}" class="card hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between mb-3">
+            <span class="badge badge-green text-xs capitalize">${(s.type||'').replace(/_/g,' ')}</span>
+            <span class="text-xs text-gray-400">Deadline: ${new Date(s.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+          </div>
+          <h3 class="font-display font-bold text-dark mb-1">${s.name}</h3>
+          <p class="text-xs text-gray-500 mb-3">${s.university?.name || 'Open to all'}</p>
+          <p class="text-sm text-green-600 font-semibold">
+            ${s.amount?.isPercentage ? s.amount.percentage + '% tuition' : s.amount?.value ? 'USD ' + s.amount.value.toLocaleString() : 'Full Scholarship'}
+          </p>
+        </a>`).join('');
+    }
+  } catch {}
+}
+
+function searchPrograms() {
+  const degree = document.getElementById('search-degree').value;
+  const field = document.getElementById('search-field').value;
+  const intake = document.getElementById('search-intake').value;
+  const params = new URLSearchParams();
+  if (degree) params.set('degree', degree);
+  if (field) params.set('field', field);
+  if (intake) params.set('intake', intake);
+  window.location.href = '/programs?' + params.toString();
+}
+
+loadHomePage();
+</script>
+<%- include('../partials/footer') %>

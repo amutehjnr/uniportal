@@ -1,0 +1,138 @@
+<%- include('../partials/head', { title: 'University – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+
+<div id="uni-content">
+  <!-- Hero skeleton -->
+  <div class="h-64 bg-gray-200 animate-pulse"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-5"><div class="card animate-pulse h-40"></div><div class="card animate-pulse h-60"></div></div>
+      <div class="space-y-4"><div class="card animate-pulse h-48"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const slug = window.location.pathname.split('/').pop();
+
+async function loadUniversity() {
+  try {
+    const data = await apiCall(`/api/v1/universities/${slug}`);
+    const u = data.data;
+    document.title = u.name + ' – UniPortal';
+
+    document.getElementById('uni-content').innerHTML = `
+    <!-- Hero -->
+    <div class="relative h-64 overflow-hidden bg-gradient-to-br from-brand-900 to-dark">
+      ${u.coverImage ? `<img src="${u.coverImage}" class="w-full h-full object-cover opacity-60"/>` : ''}
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+      <div class="absolute bottom-0 left-0 right-0 px-6 sm:px-10 pb-8">
+        <div class="max-w-7xl mx-auto flex items-end gap-5">
+          <div class="w-20 h-20 rounded-2xl overflow-hidden bg-white border-2 border-white/20 shadow-xl shrink-0">
+            ${u.logo ? `<img src="${u.logo}" class="w-full h-full object-cover"/>` : `<div class="w-full h-full bg-brand-600 flex items-center justify-center font-display font-bold text-white text-3xl">${u.name.charAt(0)}</div>`}
+          </div>
+          <div class="pb-1">
+            <h1 class="font-display text-2xl sm:text-3xl font-bold text-white">${u.name}</h1>
+            <p class="text-white/70 mt-1">${u.location?.city}, ${u.location?.state} · <span class="capitalize">${u.type}</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+          <!-- About -->
+          <div class="card">
+            <h2 class="font-display text-xl font-bold text-dark mb-4">About ${u.name}</h2>
+            <p class="text-gray-600 leading-relaxed">${u.description || 'No description available.'}</p>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            ${u.stats?.totalStudents ? `<div class="card text-center"><p class="font-display text-2xl font-bold text-brand-600">${u.stats.totalStudents.toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Total Students</p></div>` : ''}
+            ${u.stats?.internationalStudents ? `<div class="card text-center"><p class="font-display text-2xl font-bold text-purple-600">${u.stats.internationalStudents.toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Intl. Students</p></div>` : ''}
+            ${u.stats?.acceptanceRate ? `<div class="card text-center"><p class="font-display text-2xl font-bold text-green-600">${u.stats.acceptanceRate}%</p><p class="text-xs text-gray-500 mt-1">Acceptance Rate</p></div>` : ''}
+            ${u.stats?.founded ? `<div class="card text-center"><p class="font-display text-2xl font-bold text-orange-600">${u.stats.founded}</p><p class="text-xs text-gray-500 mt-1">Founded</p></div>` : ''}
+          </div>
+
+          <!-- Programs -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="font-display text-xl font-bold text-dark">Programs</h2>
+            </div>
+            <div id="programs-list" class="space-y-3">
+              <div class="animate-pulse space-y-3">${[1,2,3].map(()=>'<div class="h-16 bg-gray-100 rounded-xl"></div>').join('')}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-5">
+          <!-- Rankings -->
+          ${(u.ranking?.usnews || u.ranking?.qs) ? `
+          <div class="card">
+            <h3 class="font-display font-bold text-dark mb-4">Rankings</h3>
+            <div class="space-y-3">
+              ${u.ranking?.usnews ? `<div class="flex items-center justify-between"><span class="text-sm text-gray-600">US News & World Report</span><span class="font-bold text-brand-600">#${u.ranking.usnews}</span></div>` : ''}
+              ${u.ranking?.qs ? `<div class="flex items-center justify-between"><span class="text-sm text-gray-600">QS World Rankings</span><span class="font-bold text-brand-600">#${u.ranking.qs}</span></div>` : ''}
+              ${u.ranking?.times ? `<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Times Higher Ed</span><span class="font-bold text-brand-600">#${u.ranking.times}</span></div>` : ''}
+            </div>
+          </div>` : ''}
+
+          <!-- Contact -->
+          <div class="card">
+            <h3 class="font-display font-bold text-dark mb-4">Contact & Info</h3>
+            <div class="space-y-3 text-sm">
+              ${u.location?.address ? `<div class="flex items-start gap-2"><svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-gray-600">${u.location.address}, ${u.location.city}, ${u.location.state}</span></div>` : ''}
+              ${u.contact?.website ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg><a href="${u.contact.website}" target="_blank" class="text-brand-600 hover:underline">${u.contact.website.replace('https://','')}</a></div>` : ''}
+              ${u.contact?.admissionsEmail ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><a href="mailto:${u.contact.admissionsEmail}" class="text-brand-600 hover:underline">${u.contact.admissionsEmail}</a></div>` : ''}
+            </div>
+          </div>
+
+          <!-- CTA -->
+          <div class="card bg-brand-600 text-white">
+            <h3 class="font-display font-bold text-lg mb-2">Ready to apply?</h3>
+            <p class="text-brand-200 text-sm mb-4">Create your free account and start your application today.</p>
+            <a href="${'<%= typeof user !== "undefined" && user ? "" : "/register" %>'}" class="block w-full text-center bg-white text-brand-700 font-semibold py-2.5 rounded-xl hover:bg-brand-50 transition-colors text-sm">
+              ${'<%= typeof user !== "undefined" && user ? "Go to Dashboard" : "Apply Now – Free" %>'}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    // Load programs
+    loadPrograms(u._id);
+  } catch (err) {
+    document.getElementById('uni-content').innerHTML = `<div class="max-w-2xl mx-auto px-4 py-20 text-center"><p class="text-red-500">${err.message}</p><a href="/universities" class="btn-secondary mt-4">← Back</a></div>`;
+  }
+}
+
+async function loadPrograms(universityId) {
+  try {
+    const data = await apiCall(`/api/v1/universities/${universityId}/programs?limit=10`);
+    const container = document.getElementById('programs-list');
+    if (!data.data.length) { container.innerHTML = '<p class="text-sm text-gray-400">No programs listed yet</p>'; return; }
+    container.innerHTML = data.data.map(p => `
+      <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-brand-50 transition-colors group">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="badge badge-blue text-xs">${p.degree}</span>
+            <span class="badge badge-gray text-xs capitalize">${p.mode||'on-campus'}</span>
+          </div>
+          <p class="font-medium text-dark text-sm">${p.name}</p>
+          <p class="text-xs text-gray-500 mt-0.5">${p.field} · ${p.duration?.value||2} yr${(p.duration?.value||2)>1?'s':''}</p>
+        </div>
+        <div class="text-right shrink-0 ml-4">
+          <p class="text-sm font-bold text-brand-600">USD ${(p.tuitionFee?.amount||0).toLocaleString()}</p>
+          <p class="text-xs text-gray-400">per ${p.tuitionFee?.per||'year'}</p>
+          <a href="/register" class="text-xs text-brand-600 font-medium group-hover:underline mt-1 block">Apply →</a>
+        </div>
+      </div>`).join('');
+  } catch {}
+}
+
+loadUniversity();
+</script>
+<%- include('../partials/footer') %>

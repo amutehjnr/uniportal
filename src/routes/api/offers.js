@@ -1,0 +1,11 @@
+'use strict';
+const express = require('express');
+const router = express.Router();
+const ctrl = require('../../controllers/offerController');
+const { authenticate, authorize } = require('../../middleware/auth');
+const { audit } = require('../../middleware/audit');
+router.use(authenticate);
+router.post('/', authorize('university','admin','admission_officer','super_admin'), audit('ISSUE_OFFER','Offer'), ctrl.issueOffer);
+router.get('/:id', ctrl.getOfferById);
+router.patch('/:id/respond', authorize('student'), audit('RESPOND_OFFER','Offer'), ctrl.respondToOffer);
+module.exports = router;

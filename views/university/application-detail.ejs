@@ -1,0 +1,229 @@
+<%- include('../partials/head', { title: 'Application Review – UniPortal' }) %>
+<%- include('../partials/navbar', { user: user }) %>
+<div class="flex min-h-[calc(100vh-64px)]">
+  <main class="flex-1 p-6 lg:p-8 animate-fade-in">
+    <div class="max-w-5xl mx-auto">
+      <a href="/university/applications" class="flex items-center gap-2 text-sm text-gray-500 hover:text-brand-600 mb-6">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Back to Applications
+      </a>
+      <div id="app-content">
+        <div class="grid lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-5">
+            <div class="card animate-pulse h-40"></div>
+            <div class="card animate-pulse h-60"></div>
+          </div>
+          <div class="space-y-4">
+            <div class="card animate-pulse h-48"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Issue Offer Modal -->
+<div id="offer-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-slide-up max-h-[90vh] overflow-y-auto">
+    <div class="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+      <h3 class="font-display text-xl font-bold text-dark">Issue Offer Letter</h3>
+      <button onclick="document.getElementById('offer-modal').classList.add('hidden')" class="text-gray-400">✕</button>
+    </div>
+    <form id="offer-form" class="p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Offer Type</label>
+        <select name="type" required class="input-field">
+          <option value="unconditional">Unconditional Offer</option>
+          <option value="conditional">Conditional Offer</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Tuition Fee (USD/year)</label>
+        <input type="number" name="tuitionAmount" min="0" placeholder="25000" class="input-field" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Scholarship Amount (USD, optional)</label>
+        <input type="number" name="scholarshipAmount" min="0" placeholder="5000" class="input-field" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Deposit Required (USD, optional)</label>
+        <input type="number" name="depositAmount" min="0" placeholder="500" class="input-field" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Offer Valid For (days)</label>
+        <input type="number" name="expiresInDays" value="30" min="7" max="90" class="input-field" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-dark mb-1.5">Conditions (one per line, if any)</label>
+        <textarea name="conditions" rows="3" class="input-field resize-none" placeholder="e.g. Official transcripts must be submitted&#10;Maintain GPA above 3.0"></textarea>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('offer-modal').classList.add('hidden')" class="btn-secondary flex-1 justify-center">Cancel</button>
+        <button type="submit" class="btn-primary flex-1 justify-center">Issue Offer Letter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const appId = window.location.pathname.split('/').pop();
+const STATUS_COLORS = { draft:'badge-gray', submitted:'badge-blue', under_review:'badge-yellow', documents_requested:'badge-yellow', interview_scheduled:'badge-blue', offer_extended:'badge-purple', accepted:'badge-green', rejected:'badge-red', withdrawn:'badge-gray' };
+let appData = null;
+
+async function loadApplication() {
+  try {
+    const data = await apiCall(`/api/v1/applications/${appId}`);
+    appData = data.data;
+    renderApplication(appData);
+  } catch (err) {
+    document.getElementById('app-content').innerHTML = `<div class="card text-center py-8 text-red-500">${err.message}</div>`;
+  }
+}
+
+function renderApplication(app) {
+  const canIssueOffer = ['submitted','under_review','interview_scheduled'].includes(app.status) && !app.offerRef;
+  document.getElementById('app-content').innerHTML = `
+  <div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-5">
+      <!-- Student Info -->
+      <div class="card">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-brand-100 rounded-2xl flex items-center justify-center font-display font-bold text-brand-600 text-2xl">
+              ${(app.student?.firstName||'?').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h2 class="font-display text-xl font-bold text-dark">${app.student?.firstName} ${app.student?.lastName}</h2>
+              <p class="text-sm text-gray-500">${app.student?.email}</p>
+              ${app.student?.phone ? `<p class="text-xs text-gray-400">${app.student.phone}</p>` : ''}
+            </div>
+          </div>
+          <span class="${STATUS_COLORS[app.status]||'badge-gray'} text-sm px-3 py-1">${(app.status||'').replace(/_/g,' ')}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-400">Program</p><p class="font-medium text-dark text-sm mt-0.5">${app.program?.name}</p></div>
+          <div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-400">Degree</p><p class="font-medium text-dark text-sm mt-0.5">${app.program?.degree}</p></div>
+          <div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-400">Intake</p><p class="font-medium text-dark text-sm mt-0.5">${app.intake} ${app.intakeYear}</p></div>
+          <div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-400">App. Number</p><p class="font-mono font-medium text-dark text-sm mt-0.5">${app.applicationNumber}</p></div>
+        </div>
+      </div>
+
+      <!-- Personal Statement -->
+      ${app.personalStatement ? `
+      <div class="card">
+        <h3 class="font-display font-bold text-dark mb-3">Personal Statement</h3>
+        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">${app.personalStatement}</p>
+      </div>` : ''}
+
+      <!-- Documents -->
+      <div class="card">
+        <h3 class="font-display font-bold text-dark mb-4">Submitted Documents</h3>
+        ${app.documents?.length ? `
+        <div class="space-y-2">
+          ${app.documents.map(d => `
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-dark capitalize">${(d.type||'').replace(/_/g,' ')}</p>
+                <p class="text-xs text-gray-400">${d.name||''}</p>
+              </div>
+            </div>
+            <a href="${d.url}" target="_blank" class="btn-secondary text-xs py-1.5 px-3">View</a>
+          </div>`).join('')}
+        </div>` : '<p class="text-sm text-gray-400">No documents uploaded</p>'}
+      </div>
+
+      <!-- Timeline -->
+      <div class="card">
+        <h3 class="font-display font-bold text-dark mb-4">Application Timeline</h3>
+        <div class="space-y-3">
+          ${(app.timeline||[]).map((t,i) => `
+          <div class="flex gap-3">
+            <div class="relative flex flex-col items-center">
+              <div class="w-2.5 h-2.5 rounded-full ${i===0?'bg-brand-600':'bg-gray-300'} mt-0.5 shrink-0"></div>
+              ${i < (app.timeline.length-1) ? '<div class="w-px flex-1 bg-gray-200 mt-1"></div>' : ''}
+            </div>
+            <div class="pb-3 min-w-0">
+              <p class="text-sm font-medium text-dark capitalize">${(t.status||'').replace(/_/g,' ')}</p>
+              ${t.message ? `<p class="text-xs text-gray-500 mt-0.5">${t.message}</p>` : ''}
+              <p class="text-xs text-gray-400 mt-0.5">${new Date(t.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}</p>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar: Actions -->
+    <div class="space-y-4">
+      <div class="card">
+        <h3 class="font-display font-bold text-dark mb-4">Actions</h3>
+        <div class="space-y-2">
+          <select id="status-select" class="input-field text-sm">
+            <option value="">Change Status…</option>
+            <option value="under_review">Mark Under Review</option>
+            <option value="documents_requested">Request Documents</option>
+            <option value="interview_scheduled">Schedule Interview</option>
+            <option value="rejected">Reject Application</option>
+          </select>
+          <textarea id="status-message" rows="2" placeholder="Add a message for the student…" class="input-field resize-none text-sm"></textarea>
+          <button onclick="updateStatus()" class="btn-secondary w-full justify-center text-sm">Update Status</button>
+          ${canIssueOffer ? `
+          <div class="border-t border-gray-100 pt-2 mt-2">
+            <button onclick="document.getElementById('offer-modal').classList.remove('hidden')" class="btn-primary w-full justify-center bg-green-600 hover:bg-green-700">
+              🎉 Issue Offer Letter
+            </button>
+          </div>` : ''}
+          ${app.offerRef ? '<div class="badge badge-green w-full justify-center mt-2 py-2">Offer Already Issued</div>' : ''}
+        </div>
+      </div>
+
+      ${app.scholarship ? `
+      <div class="card bg-green-50 border-green-200">
+        <h3 class="font-display font-bold text-green-800 text-sm mb-2">Applied Scholarship</h3>
+        <p class="text-sm text-green-700 font-medium">${app.scholarship.name}</p>
+        <p class="text-xs text-green-600 mt-1">${app.scholarship.amount?.value ? 'USD '+app.scholarship.amount.value.toLocaleString() : 'Full'}</p>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+async function updateStatus() {
+  const status = document.getElementById('status-select').value;
+  const message = document.getElementById('status-message').value;
+  if (!status) { showToast('Please select a status.', 'error'); return; }
+  try {
+    await apiCall(`/api/v1/applications/${appId}/status`, { method:'PATCH', body:JSON.stringify({ status, message }) });
+    showToast('Status updated successfully.', 'success');
+    loadApplication();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+document.getElementById('offer-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const conditions = form.conditions.value.trim() ? form.conditions.value.trim().split('\n').filter(Boolean) : [];
+  try {
+    await apiCall('/api/v1/offers', {
+      method: 'POST',
+      body: JSON.stringify({
+        applicationId: appId,
+        type: form.type.value,
+        conditions,
+        tuitionFee: form.tuitionAmount.value ? { amount: parseFloat(form.tuitionAmount.value), currency:'USD', per:'year' } : undefined,
+        scholarshipAmount: form.scholarshipAmount.value ? { amount: parseFloat(form.scholarshipAmount.value), currency:'USD' } : undefined,
+        depositRequired: form.depositAmount.value ? { amount: parseFloat(form.depositAmount.value), currency:'USD' } : undefined,
+        expiresInDays: parseInt(form.expiresInDays.value),
+      }),
+    });
+    showToast('Offer letter issued and emailed to student!', 'success');
+    document.getElementById('offer-modal').classList.add('hidden');
+    loadApplication();
+  } catch (err) { showToast(err.message, 'error'); }
+});
+
+loadApplication();
+</script>
+<%- include('../partials/footer') %>

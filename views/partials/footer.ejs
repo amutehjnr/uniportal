@@ -1,0 +1,107 @@
+</body>
+
+<!-- Global JS -->
+<script>
+  // ── User menu ──────────────────────────────────────────────────────────────
+  function toggleUserMenu() {
+    document.getElementById('user-menu')?.classList.toggle('hidden');
+  }
+  function toggleMobileMenu() {
+    document.getElementById('mobile-menu')?.classList.toggle('hidden');
+  }
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('user-menu');
+    if (menu && !menu.parentElement.contains(e.target)) menu.classList.add('hidden');
+  });
+
+  // ── Toast System ──────────────────────────────────────────────────────────
+  function showToast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    const icons = {
+      success: '<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+      error: '<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+      info: '<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+    };
+    toast.innerHTML = `${icons[type] || icons.info}<span class="flex-1">${message}</span><button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100">✕</button>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+  }
+
+  // ── API Helper ─────────────────────────────────────────────────────────────
+  async function apiCall(url, options = {}) {
+    const defaults = {
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    };
+    const res = await fetch(url, { ...defaults, ...options, headers: { ...defaults.headers, ...(options.headers || {}) } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Request failed');
+    return data;
+  }
+
+  // ── Logout ─────────────────────────────────────────────────────────────────
+  async function logout() {
+    try {
+      await apiCall('/api/v1/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    } catch {
+      window.location.href = '/login';
+    }
+  }
+
+  // ── Notification Badge ─────────────────────────────────────────────────────
+  async function loadNotifCount() {
+    try {
+      const data = await apiCall('/api/v1/notifications?limit=1');
+      const count = data.unread || 0;
+      const badge = document.getElementById('notif-badge');
+      const sidebarCount = document.getElementById('notif-count');
+      if (count > 0) {
+        if (badge) { badge.textContent = count > 9 ? '9+' : count; badge.classList.remove('hidden'); }
+        if (sidebarCount) { sidebarCount.textContent = count; sidebarCount.classList.remove('hidden'); }
+      }
+    } catch {}
+  }
+
+  // ── Auto token refresh ─────────────────────────────────────────────────────
+  async function refreshAccessToken() {
+    try {
+      await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' });
+    } catch {}
+  }
+
+  // Run on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadNotifCount();
+    // Refresh token every 13 minutes (access token = 15m)
+    setInterval(refreshAccessToken, 13 * 60 * 1000);
+    // Handle URL toast params
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === '1') showToast('Email verified successfully! Welcome to UniPortal.', 'success');
+    if (params.get('error')) showToast(decodeURIComponent(params.get('error')), 'error');
+  });
+
+  // ── Form submission helper ─────────────────────────────────────────────────
+  function setupForm(formId, url, method = 'POST', onSuccess) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('[type="submit"]');
+      const originalText = btn?.innerHTML;
+      if (btn) { btn.disabled = true; btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Processing…'; }
+      try {
+        const body = Object.fromEntries(new FormData(form));
+        const data = await apiCall(url, { method, body: JSON.stringify(body) });
+        if (onSuccess) onSuccess(data);
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+      }
+    });
+  }
+</script>
+</html>
