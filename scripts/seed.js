@@ -25,14 +25,14 @@ async function seed() {
 
   // ── Create Super Admin ────────────────────────────────────────────────────
   const superAdmin = await User.create({
-    firstName: 'Super', lastName: 'Admin', email: process.env.SUPER_ADMIN_EMAIL || 'superadmin@uniportal.io',
-    password: process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin1234!', role: 'super_admin', isEmailVerified: true,
+    firstName: 'Super', lastName: 'Admin', email: process.env.SUPER_ADMIN_EMAIL || 'emiliachris74@gmail.com',
+    password: process.env.SUPER_ADMIN_PASSWORD || 'Musamarch@121', role: 'super_admin', isEmailVerified: true,
   });
 
   // ── Create Admin ──────────────────────────────────────────────────────────
   const admin = await User.create({
     firstName: 'Admin', lastName: 'User', email: 'admin@demo.com',
-    password: 'Demo1234', role: 'admin', isEmailVerified: true,
+    password: 'Demo@6565', role: 'admin', isEmailVerified: true,
   });
 
   // ── Create Demo Student ───────────────────────────────────────────────────

@@ -238,6 +238,6 @@ function searchPrograms() {
   window.location.href = '/programs?' + params.toString();
 }
 
-loadHomePage();
+document.addEventListener('DOMContentLoaded', loadHomePage);
 </script>
 <%- include('../partials/footer') %>

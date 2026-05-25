@@ -37,13 +37,29 @@ const authenticate = asyncHandler(async (req, res, next) => {
 });
 
 // Optional authentication – attaches user if token present, never blocks
-const optionalAuth = asyncHandler(async (req, res, next) => {
-  try {
-    await authenticate(req, res, next);
-  } catch {
-    next();
+const optionalAuth = async (req, res, next) => {
+  let token;
+
+  if (req.cookies?.access_token) {
+    token = req.cookies.access_token;
+  } else if (req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
   }
-});
+
+  if (!token) return next(); // No token → just continue
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    const user = await User.findById(decoded.id).select('+refreshTokens');
+    if (user && user.isActive && !user.isSuspended) {
+      req.user = user;
+    }
+  } catch {
+    // Invalid/expired token → silently ignore, continue as guest
+  }
+
+  next();
+};
 
 // Role-based access control
 const authorize = (...roles) => (req, res, next) => {

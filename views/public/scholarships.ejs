@@ -146,6 +146,6 @@ async function loadScholarships(page = currentPage) {
   }
 }
 
-loadScholarships(1);
+document.addEventListener('DOMContentLoaded', () => loadScholarships(1));
 </script>
 <%- include('../partials/footer') %>

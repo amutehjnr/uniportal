@@ -112,6 +112,6 @@ async function loadUniversities(page = currentPage) {
   } catch (err) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-red-500">${err.message}</div>`; }
 }
 
-loadUniversities(1);
+document.addEventListener('DOMContentLoaded', () => loadUniversities(1));
 </script>
 <%- include('../partials/footer') %>

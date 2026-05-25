@@ -1,4 +1,4 @@
-/* UniPortal Custom CSS — supplements Tailwind */
+UniPortal Custom CSS — supplements Tailwind
 
 /* Smooth transitions */
 *, *::before, *::after { box-sizing: border-box; }
@@ -27,3 +27,217 @@ tr:last-child td { border-bottom: none; }
 /* File input styling */
 input[type="file"] { cursor: pointer; }
 input[type="file"]::-webkit-file-upload-button { cursor: pointer; }
+
+
+/* ============================================
+   MODERN, HUMAN-CRAFTED HERO SECTION STYLES
+   Replace your existing hero CSS with this
+   ============================================ */
+
+/* Hero container — softer, more organic feel */
+.hero-section {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Gradient overlay — more nuanced, less harsh */
+.hero-gradient {
+  background: radial-gradient(ellipse at 30% 40%, rgba(15, 45, 65, 0.95), rgba(5, 25, 40, 0.98));
+}
+
+/* Subtle grain texture for "real" feel */
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Animated floating orbs — organic movement */
+@keyframes floatSlow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(15px, -20px) scale(1.05); }
+  66% { transform: translate(-10px, 15px) scale(0.98); }
+}
+
+@keyframes floatSlower {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-20px, -10px) rotate(3deg); }
+}
+
+.hero-orb-1 {
+  animation: floatSlow 18s ease-in-out infinite;
+}
+
+.hero-orb-2 {
+  animation: floatSlower 22s ease-in-out infinite;
+}
+
+.hero-orb-3 {
+  animation: floatSlow 25s ease-in-out infinite reverse;
+}
+
+/* Typography — more character, less generic */
+.hero-title {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.hero-title span {
+  background: linear-gradient(135deg, #FDE68A 0%, #FCD34D 40%, #FBBF24 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  position: relative;
+  display: inline-block;
+}
+
+/* Underline accent (hand-drawn feel) */
+.hero-title span::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: rgba(251, 191, 36, 0.25);
+  border-radius: 4px;
+  z-index: -1;
+}
+
+/* Badge — more refined, less "bootstrap" */
+.hero-badge {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.hero-badge:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Custom pulse — softer, more organic */
+@keyframes softPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.pulse-dot {
+  animation: softPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Stats — more personality */
+.hero-stat {
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.hero-stat:first-child {
+  border-left: none;
+}
+
+.hero-stat:hover {
+  transform: translateY(-2px);
+  border-left-color: rgba(251, 191, 36, 0.6);
+}
+
+.stat-value {
+  font-family: 'Inter', monospace;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(to right, #FFFFFF, #E2E8F0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Buttons — bespoke, not framework-looking */
+.btn-primary-custom {
+  background: linear-gradient(105deg, #F59E0B 0%, #D97706 100%);
+  border: none;
+  box-shadow: 0 8px 20px -6px rgba(245, 158, 11, 0.3);
+  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary-custom::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -8px rgba(245, 158, 11, 0.4);
+  background: linear-gradient(105deg, #FBBF24 0%, #F59E0B 100%);
+}
+
+.btn-primary-custom:hover::before {
+  left: 100%;
+}
+
+.btn-secondary-custom {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-custom:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Responsive typography tweaks */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.75rem;
+    letter-spacing: -0.02em;
+  }
+  
+  .hero-title span::after {
+    bottom: 4px;
+    height: 6px;
+  }
+  
+  .hero-stat {
+    border-left: none;
+    padding-left: 0;
+  }
+}
+
+/* Smooth entrance animation for hero content */
+@keyframes gentleRise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-content > * {
+  animation: gentleRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.hero-content > :nth-child(1) { animation-delay: 0s; }
+.hero-content > :nth-child(2) { animation-delay: 0.1s; }
+.hero-content > :nth-child(3) { animation-delay: 0.2s; }
+.hero-content > :nth-child(4) { animation-delay: 0.3s; }
+.hero-content > :nth-child(5) { animation-delay: 0.4s; }

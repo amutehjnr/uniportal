@@ -128,6 +128,6 @@ async function loadPrograms(page = currentPage) {
   } catch (err) { grid.innerHTML = `<div class="col-span-full card text-center py-8 text-red-500">${err.message}</div>`; }
 }
 
-loadPrograms(1);
+document.addEventListener('DOMContentLoaded', () => loadPrograms(1));
 </script>
 <%- include('../partials/footer') %>

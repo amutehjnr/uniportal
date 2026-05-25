@@ -74,13 +74,11 @@
 
   // Run on page load
   document.addEventListener('DOMContentLoaded', () => {
-    loadNotifCount();
-    // Refresh token every 13 minutes (access token = 15m)
-    setInterval(refreshAccessToken, 13 * 60 * 1000);
-    // Handle URL toast params
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('verified') === '1') showToast('Email verified successfully! Welcome to UniPortal.', 'success');
-    if (params.get('error')) showToast(decodeURIComponent(params.get('error')), 'error');
+    const isLoggedIn = document.getElementById('notif-btn') !== null;
+    if (isLoggedIn) {
+      loadNotifCount();
+      setInterval(refreshAccessToken, 13 * 60 * 1000);
+    }
   });
 
   // ── Form submission helper ─────────────────────────────────────────────────
