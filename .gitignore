@@ -27,4 +27,5 @@ Thumbs.db
 *.swp
 
 # Uploads (managed by Cloudinary)
-
+scripts/
+README.md
